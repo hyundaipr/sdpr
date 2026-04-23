@@ -524,6 +524,8 @@ function detectLoad(txt){
     rows.filter(r=>r.RoleName==='Sales Person'&&HDG.includes(r.FullName)).forEach(r=>{staged[r.FullName].sales=parseInt(r.Sold)||0;});
     const umSold=rows.filter(r=>r.RoleName==='Unique Motors').reduce((a,r)=>a+(parseInt(r.Sold)||0),0);
     staged['__um'].sales=umSold;
+    const ncsSold=rows.filter(r=>r.RoleName!=='Unique Motors').reduce((a,r)=>a+(parseInt(r.Sold)||0),0);
+    staged['__ncs']=ncsSold;
     filesLoaded.sales=true;
     document.getElementById('badge-sales').className='tbadge loaded';
     document.getElementById('step3').className='step-chip done';
@@ -551,7 +553,7 @@ function runDashboard(){
 
 // ===== RENDER OVERVIEW =====
 function renderResumen(){
-  const ncs=CFG.ncs,opps=CFG.opps,sched=CFG.sched,shown=CFG.shown,asold=CFG.asold;
+  const ncs=live['__ncs']!=null?live['__ncs']:CFG.ncs,opps=CFG.opps,sched=CFG.sched,shown=CFG.shown,asold=CFG.asold;
   const umSales=live['__um']?live['__um'].sales:0;
   const ucDaily=WD?(umSales/WD).toFixed(2):'0.00';
   const proj=WD?Math.round(ncs/WD*CFG.twd):0;
