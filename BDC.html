@@ -1,0 +1,1100 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2a4a;--navy2:#1a3c6e;--navy3:#234f8f;
+  --green:#1a9e5c;--gl:#e6f7ef;--gt:#0d6e3f;
+  --red:#d93b3b;--rl:#fdeaea;--rt:#8b1a1a;
+  --amber:#d97706;--al:#fff7e6;--at:#7c4a00;
+  --blue:#2563eb;--bl:#eff6ff;--bt:#1e3a8a;
+  --radius:12px;--rs:7px;
+}
+.app{font-family:'Segoe UI',system-ui,sans-serif;padding:12px;}
+.topbar{background:var(--navy);border-radius:var(--radius);padding:14px 20px;display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.logo-mark{width:38px;height:38px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-text .brand{font-size:16px;font-weight:700;color:#fff;}
+.logo-text .sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;}
+.tbadge{font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);display:flex;align-items:center;gap:4px;transition:all .2s;}
+.tbadge.loaded{border-color:rgba(74,222,128,.5);color:#4ade80;background:rgba(74,222,128,.08);}
+.tbadge .dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.stepper{display:flex;align-items:center;background:rgba(255,255,255,.08);border-radius:8px;border:1px solid rgba(255,255,255,.15);overflow:hidden;}
+.stepper label{font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;padding:0 10px;}
+.stepper-btn{width:30px;height:32px;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;user-select:none;line-height:1;}
+.stepper-btn:hover{background:rgba(255,255,255,.22);}
+.stepper-btn:active{background:rgba(255,255,255,.3);}
+.stepper-val{min-width:28px;text-align:center;font-size:15px;font-weight:800;color:#fff;padding:0 2px;}
+.stepper-sep{font-size:11px;color:rgba(255,255,255,.3);padding:0 10px 0 4px;}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.upload-btn{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .15s;}
+.upload-btn:hover{background:rgba(255,255,255,.2);}
+.run-btn{background:#fff;color:var(--navy);border:none;border-radius:8px;padding:7px 18px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:all .15s;}
+.run-btn:hover{background:#dbeafe;transform:scale(1.02);}
+.run-btn:active{transform:scale(0.98);}
+.run-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.run-btn .play{width:14px;height:14px;background:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.setup-btn{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s;}
+.setup-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+.reset-btn{background:rgba(217,59,59,.15);color:#f87171;border:1px solid rgba(217,59,59,.3);border-radius:8px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .15s;}
+.reset-btn:hover{background:rgba(217,59,59,.28);border-color:#f87171;}
+.cfg-badge{display:inline-flex;align-items:center;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;color:#16a34a;margin-left:4px;}
+.cfg-badge.warn{background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.4);color:#f59e0b;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--color-background-primary,#fff);border-radius:16px;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.35);font-family:'Segoe UI',system-ui,sans-serif;}
+.modal-hdr{background:var(--navy);border-radius:16px 16px 0 0;padding:20px 24px;display:flex;align-items:center;gap:14px;}
+.modal-hdr .mh-icon{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-hdr .mh-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px;}
+.modal-hdr .mh-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;}
+.modal-body{padding:24px;background:var(--color-background-primary,#fff);}
+.info-box{background:var(--bl,#eff6ff);border:1px solid rgba(37,99,235,.2);border-radius:var(--radius);padding:13px 16px;font-size:11px;color:var(--bt,#1e3a8a);line-height:1.75;margin-bottom:20px;}
+.info-box strong{color:var(--navy);}
+.setup-sec{margin-bottom:22px;}
+.setup-sec-title{font-size:9px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.setup-sec-title::after{content:'';flex:1;height:1px;background:var(--color-border-tertiary,#e2e8f0);}
+.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;}
+.sf{display:flex;flex-direction:column;gap:5px;}
+.sf label{font-size:9px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.6px;}
+.sf input{border:1px solid var(--color-border-tertiary,#e2e8f0);border-radius:var(--rs);padding:9px 12px;font-size:14px;font-weight:700;color:var(--navy);font-family:'Segoe UI',system-ui,sans-serif;transition:border .15s;outline:none;background:var(--color-background-primary,#fff);}
+.sf input:focus{border-color:var(--navy2);}
+.sf input::placeholder{font-weight:400;color:#94a3b8;}
+.sf .hint{font-size:9px;color:var(--color-text-tertiary,#94a3b8);}
+.modal-ftr{padding:14px 24px;border-top:1px solid var(--color-border-tertiary,#f1f5f9);display:flex;justify-content:flex-end;gap:8px;background:var(--color-background-primary,#fff);border-radius:0 0 16px 16px;}
+.btn-cancel{padding:9px 20px;border-radius:var(--rs);border:0.5px solid var(--color-border-tertiary,#e2e8f0);background:transparent;color:var(--color-text-secondary);font-size:12px;font-weight:600;cursor:pointer;font-family:'Segoe UI',system-ui,sans-serif;transition:all .15s;}
+.btn-cancel:hover{background:var(--color-background-secondary);}
+.btn-save{padding:9px 24px;border-radius:var(--rs);border:none;background:var(--navy);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Segoe UI',system-ui,sans-serif;transition:background .15s;}
+.btn-save:hover{background:var(--navy2);}
+
+/* TABS */
+.tabs-row{display:flex;gap:4px;margin-bottom:14px;}
+.tab{padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer;border-radius:8px;color:var(--color-text-secondary);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);transition:all .15s;}
+.tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.tab:not(.active):hover{border-color:var(--navy2);color:var(--navy2);}
+.panel{display:none;}.panel.active{display:block;}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;}
+.empty-icon{width:64px;height:64px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.empty-state h3{font-size:15px;font-weight:700;color:var(--color-text-primary);margin-bottom:6px;}
+.empty-state p{font-size:12px;color:var(--color-text-secondary);max-width:360px;line-height:1.6;}
+.empty-steps{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center;}
+.step-chip{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:8px 14px;font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:6px;}
+.step-chip .sn{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-chip.done{border-color:var(--green);color:var(--gt);background:var(--gl);}
+.step-chip.done .sn{background:var(--green);}
+.step-chip.ready{border-color:var(--navy2);color:var(--navy2);}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;}
+.kc{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius);padding:13px 15px;position:relative;overflow:hidden;}
+.kc .acc{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0;}
+.kc .kl{font-size:9px;color:var(--color-text-secondary);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;}
+.kc .kv{font-size:24px;font-weight:800;line-height:1;margin-bottom:3px;}
+.kc .km{font-size:9px;color:var(--color-text-tertiary);}
+.kc .ktarget{font-size:9px;color:var(--color-text-tertiary);margin-top:3px;padding-top:4px;border-top:0.5px solid var(--color-border-tertiary);}
+.kc.good .acc{background:var(--green);}.kc.good .kv{color:var(--gt);}
+.kc.bad .acc{background:var(--red);}.kc.bad .kv{color:var(--rt);}
+.kc.warn .acc{background:var(--amber);}.kc.warn .kv{color:var(--at);}
+.kc.info .acc{background:var(--blue);}.kc.info .kv{color:var(--bt);}
+.kc.neutral .acc{background:var(--navy2);}.kc.neutral .kv{color:var(--color-text-primary);}
+.daily-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;}
+.daily-card{background:var(--color-background-secondary);border-radius:var(--rs);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+.daily-card .dl{font-size:9px;color:var(--color-text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.daily-card .dv{font-size:15px;font-weight:800;color:var(--color-text-primary);}
+.trends-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.trend-chip{background:var(--navy);color:#fff;border-radius:8px;padding:8px 16px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;}
+.trend-chip .tv{font-size:20px;font-weight:800;}
+.trend-chip .tl{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;}
+.sec-hd{display:flex;align-items:center;gap:10px;margin:4px 0 8px;}
+.sec-hd .line{flex:1;height:1px;background:var(--color-border-tertiary);}
+.sec-hd span{font-size:10px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.7px;white-space:nowrap;}
+.legend-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--color-text-secondary);}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin-bottom:14px;}
+.tbl{width:100%;border-collapse:collapse;min-width:1100px;}
+.tbl .hdr-row th{background:var(--navy);color:rgba(255,255,255,.75);padding:8px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:center;white-space:nowrap;}
+.tbl .hdr-row th:nth-child(2){text-align:left;}
+.tbl .hdr-row th.grp{background:var(--navy2);border-left:1px solid rgba(255,255,255,.1);}
+.tbl tbody tr{border-bottom:0.5px solid var(--color-border-tertiary);transition:background .1s;}
+.tbl tbody tr:hover{background:var(--color-background-secondary);}
+.tbl tbody tr.vacant td,.tbl tbody tr.house td{opacity:.4;}
+.tbl tbody tr.um td{background:#fff8e1;}
+.tbl td{padding:9px 10px;font-size:11px;color:var(--color-text-primary);text-align:center;vertical-align:middle;}
+.tbl td.nc{text-align:left;}
+.tbl td.nc .fn{font-size:12px;font-weight:700;color:var(--navy2);}
+.tbl td.nc .ln{font-size:10px;color:var(--color-text-tertiary);}
+.tbl td.tn{font-size:13px;font-weight:800;color:var(--red);}
+.pill{display:inline-block;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700;}
+.pill-g{background:var(--gl);color:var(--gt);}
+.pill-r{background:var(--rl);color:var(--rt);}
+.pill-b{background:var(--bl);color:var(--bt);}
+.ohi{background:var(--gl);color:var(--gt);border-radius:4px;padding:1px 6px;font-weight:700;}
+.olo{background:var(--rl);color:var(--rt);border-radius:4px;padding:1px 6px;font-weight:700;}
+.vpos{color:var(--gt);font-weight:700;}
+.vneg{color:var(--rt);font-weight:700;}
+.ehi{background:var(--gl);color:var(--gt);border-radius:4px;padding:2px 8px;font-weight:700;}
+.eze{background:var(--color-background-secondary);color:var(--color-text-secondary);border-radius:4px;padding:2px 8px;font-weight:700;}
+.toast{background:var(--navy);color:#fff;border-radius:10px;padding:11px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:12px;font-weight:500;}
+.toast .tick{width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* SALES REP TAB */
+.vlegend{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.vleg-chip{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:6px;padding:4px 10px;border:0.5px solid var(--color-border-tertiary);}
+.vleg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px;}
+.vcard{border:1.5px solid var(--color-border-tertiary);border-radius:var(--radius);padding:13px 10px;cursor:pointer;text-align:center;background:var(--color-background-primary);transition:all .15s;}
+.vcard:hover{border-color:var(--navy2);background:var(--bl);}
+.vcard.sel{border-color:var(--navy);border-width:2px;background:var(--bl);}
+.vcard.all-card{border-style:dashed;border-color:var(--navy2);}
+.vcard.all-card:hover{border-style:solid;background:#e8f0fb;}
+.vcard.all-card.sel{border-style:solid;border-color:var(--navy);background:#e8f0fb;}
+.av{width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
+.av.all-av{background:var(--navy2);font-size:10px;font-weight:800;}
+.vcard .vn{font-size:11px;font-weight:700;color:var(--color-text-primary);}
+.vcard .vt{font-size:10px;color:var(--color-text-tertiary);margin:2px 0;}
+.vcard .vs{font-size:13px;font-weight:800;margin-top:4px;}
+.vdhdr{background:var(--navy);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:16px;margin-bottom:12px;flex-wrap:wrap;}
+.vd-av{width:52px;height:52px;min-width:52px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.vd-nm{font-size:16px;font-weight:700;color:#fff;}
+.vd-meta{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;}
+.vd-stats{margin-left:auto;display:flex;gap:22px;flex-wrap:wrap;}
+.vd-s{display:flex;flex-direction:column;align-items:center;}
+.vd-s .sv{font-size:24px;font-weight:800;color:#fff;line-height:1;}
+.vd-s .sl{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.4px;margin-top:4px;}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:12px;}
+.mcard{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--rs);padding:11px 14px;display:flex;flex-direction:column;}
+.mcard .ml{font-size:9px;color:var(--color-text-secondary);font-weight:700;text-transform:uppercase;letter-spacing:.5px;height:26px;display:flex;align-items:flex-start;line-height:1.3;}
+.mcard .mv{font-size:22px;font-weight:800;color:var(--color-text-primary);line-height:1;margin-top:6px;}
+.mcard.g .mv{color:var(--gt);}.mcard.r .mv{color:var(--rt);}.mcard.a .mv{color:var(--at);}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.ccard{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius);padding:14px;}
+.ctitle{font-size:9px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+
+/* FILES TAB */
+.upzone{border:2px dashed var(--color-border-secondary);border-radius:var(--radius);padding:28px;text-align:center;cursor:pointer;transition:all .15s;background:var(--color-background-primary);}
+.upzone:hover{background:var(--bl);border-color:#93c5fd;}
+.upload-list{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+.uitem{display:flex;align-items:center;gap:10px;padding:9px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-primary);width:fit-content;max-width:100%;}
+.fi{width:30px;height:30px;border-radius:6px;background:var(--bl);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.uitem .ufname{font-size:12px;font-weight:600;color:var(--color-text-primary);}
+.uitem .uftype{font-size:10px;color:var(--gt);margin-top:1px;}
+.uitem .uftype.err{color:var(--rt);}
+.fmt-box{background:var(--color-background-secondary);border-radius:var(--rs);padding:12px 16px;font-size:10px;line-height:1.8;color:var(--color-text-secondary);margin-top:12px;max-width:520px;}
+</style>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="setup-overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="mh-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+      </div>
+      <div>
+        <div class="mh-title">Dashboard Configuration</div>
+        <div class="mh-sub">Enter the values that do not come from the CSV files — required to generate the dashboard</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="info-box">
+        <strong>How it works:</strong><br>
+        The <strong>3 CSV files</strong> (Appointment Report, New Leads by Rep, Sales Stats) feed the <strong>individual rep table</strong> — leads, sales and appointments per person.<br>
+        The <strong>values below</strong> feed the <strong>header KPIs</strong> — totals, ratios, trends and projections.<br>
+        Without this configuration the dashboard cannot calculate correctly.
+      </div>
+
+      <div class="setup-sec">
+        <div class="setup-sec-title">Fixed Parameters — update monthly</div>
+        <div class="setup-grid">
+          <div class="sf">
+            <label>Monthly NCS Objective</label>
+            <input type="number" id="cfg-obj" placeholder="e.g. 62" min="1">
+            <div class="hint">New Car Sales goal for the month</div>
+          </div>
+          <div class="sf">
+            <label>Total Working Days in Month</label>
+            <input type="number" id="cfg-twd" placeholder="e.g. 25" min="1" max="31">
+            <div class="hint">Total business days this month</div>
+          </div>
+          <div class="sf">
+            <label>Number of Sales Executives</label>
+            <input type="number" id="cfg-execs" placeholder="e.g. 9" min="1">
+            <div class="hint">Active reps on the floor</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-sec">
+        <div class="setup-sec-title">MTD Totals — update daily</div>
+        <div class="setup-grid">
+          <div class="sf">
+            <label>New Cars Sales MTD</label>
+            <input type="number" id="cfg-ncs" placeholder="e.g. 19" min="0">
+            <div class="hint">Total new cars sold month-to-date</div>
+          </div>
+          <div class="sf">
+            <label>Total Oppties MTD</label>
+            <input type="number" id="cfg-opps" placeholder="e.g. 124" min="0">
+            <div class="hint">Accumulated opportunities / leads</div>
+          </div>
+          <div class="sf">
+            <label>Scheduled Sales Appt. MTD</label>
+            <input type="number" id="cfg-sched" placeholder="e.g. 33" min="0">
+            <div class="hint">Total scheduled appointments</div>
+          </div>
+          <div class="sf">
+            <label>Shown Sales Appt. MTD</label>
+            <input type="number" id="cfg-shown" placeholder="e.g. 19" min="0">
+            <div class="hint">Appointments that showed up</div>
+          </div>
+          <div class="sf">
+            <label>Appt Sold MTD</label>
+            <input type="number" id="cfg-asold" placeholder="e.g. 12" min="0">
+            <div class="hint">Appointments that resulted in a sale</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-cancel" id="btn-cancel-setup" onclick="closeSetup()">Cancel</button>
+      <button class="btn-save" onclick="saveSetup()">Save &amp; Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+<h2 style="position:absolute;left:-9999px;">Sales Dashboard Hyundai de Guaynabo</h2>
+
+<div class="topbar">
+  <div class="logo-mark">
+    <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#0f2a4a"/><path d="M7 16.5L13 22.5L25 10" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="logo-text">
+    <div class="brand">Hyundai de Guaynabo</div>
+    <div class="sub" id="fecha-hoy"></div>
+  </div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap;">
+    <div class="tbadge" id="badge-appt"><div class="dot"></div>Appointment Report</div>
+    <div class="tbadge" id="badge-leads"><div class="dot"></div>New Leads by Rep</div>
+    <div class="tbadge" id="badge-sales"><div class="dot"></div>Sales Stats</div>
+  </div>
+  <div class="stepper">
+    <label>Working Days</label>
+    <button class="stepper-btn" onclick="changeWD(-1)">&#8722;</button>
+    <div class="stepper-val" id="wd-val">1</div>
+    <button class="stepper-btn" onclick="changeWD(1)">&#43;</button>
+    <span class="stepper-sep" id="wd-sep">/ 25</span>
+  </div>
+  <div class="top-right">
+    <button class="setup-btn" onclick="openSetup()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+      Setup
+      <span class="cfg-badge warn" id="cfg-badge">Required</span>
+    </button>
+    <label class="upload-btn">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v9M5 5l3-3 3 3M2 12v2h12v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Upload CSV
+      <input type="file" id="file-main" accept=".csv" multiple style="display:none;">
+    </label>
+    <button class="run-btn" id="run-btn" onclick="runDashboard()" disabled>
+      <div class="play"><svg width="7" height="8" viewBox="0 0 8 10" fill="white"><path d="M1 1l6 4-6 4V1z"/></svg></div>
+      Run
+    </button>
+    <button class="reset-btn" onclick="resetAll()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      Reset
+    </button>
+  </div>
+</div>
+
+<div class="tabs-row">
+  <div class="tab active" onclick="showTab('resumen')">Overview</div>
+  <div class="tab" onclick="showTab('vendedores')">By Sales Rep</div>
+  <div class="tab" onclick="showTab('monthly')">Monthly Sales</div>
+  <div class="tab" onclick="showTab('archivos')">Files</div>
+</div>
+
+<div id="tab-resumen" class="panel active">
+  <div id="resumen-content">
+    <div class="empty-state">
+      <div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <h3>No data loaded</h3>
+      <p>Start by clicking <strong>Setup</strong> to enter the monthly values, then upload the 3 CSV files and press Run.</p>
+      <div class="empty-steps">
+        <div class="step-chip" id="step0"><div class="sn">1</div>Setup Configuration</div>
+        <div class="step-chip" id="step1"><div class="sn">2</div>Appointment Report</div>
+        <div class="step-chip" id="step2"><div class="sn">3</div>New Leads by Rep</div>
+        <div class="step-chip" id="step3"><div class="sn">4</div>Sales Stats</div>
+        <div class="step-chip" id="step4"><div class="sn">5</div>Press Run</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-vendedores" class="panel">
+  <div id="vendedores-content">
+    <div class="empty-state">
+      <div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+      <h3>No sales rep data</h3>
+      <p>Complete Setup, upload the files and press Run.</p>
+    </div>
+  </div>
+</div>
+
+<div id="tab-monthly" class="panel">
+  <div id="monthly-content">
+    <div class="empty-state">
+      <div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+      <h3>No Monthly Sales data</h3>
+      <p>Upload the <strong>Monthly Sales Reports CSV</strong> in the Files tab to view this report.</p>
+    </div>
+  </div>
+</div>
+
+<div id="tab-archivos" class="panel">
+  <div class="upzone" onclick="document.getElementById('file-arch').click()" style="cursor:pointer;">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:4px;">Drag or select the 3 CSV files</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);">You can upload them all at once</div>
+    <input type="file" id="file-arch" accept=".csv" multiple style="display:none;">
+  </div>
+  <div class="upload-list" id="upload-log"></div>
+  <div class="fmt-box">
+    <strong style="color:var(--color-text-primary);">Columns used:</strong><br>
+    <strong style="color:var(--color-text-primary);">Appointment Report</strong> — ApptsOpened · ApptsCompleted · OpenedSold (Sales Person)<br>
+    <strong style="color:var(--color-text-primary);">New Leads by Rep</strong> — vchAssignedName · NewLeads<br>
+    <strong style="color:var(--color-text-primary);">Sales Stats (By Team)</strong> — FullName · RoleName · Sold (Sales Person HdG)
+  </div>
+  <div style="margin-top:20px;">
+    <div style="font-size:9px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">Monthly Sales Report — Optional <span style="flex:1;height:1px;background:var(--color-border-tertiary);display:block;"></span></div>
+    <div class="upzone" onclick="document.getElementById('file-monthly').click()" style="padding:20px;max-width:520px;cursor:pointer;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gt)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--color-text-primary);margin-bottom:3px;">Monthly Sales Reports CSV</div>
+      <div style="font-size:10px;color:var(--color-text-secondary);">Sale_date · Sperson1_name · Model · Selling_price · Original_price · Diff</div>
+      <input type="file" id="file-monthly" accept=".csv" style="display:none;">
+    </div>
+    <div class="upload-list" id="upload-log-monthly"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const HDG=['Alex Rodriguez','Angel Rodriguez','Hakim Rivera','Ivan Rosa','Jeicy Perez','Jerick Delgado','Jesus Caldero','Miguel Rodriguez','Roberto Valcarcel'];
+const TURNOS={1:'Jeicy Perez',2:'Angel Rodriguez',3:'Jesus Caldero',4:'Jerick Delgado',5:'Alex Rodriguez',6:'Hakim Rivera',7:'Ivan Rosa',8:'Miguel Rodriguez',9:'Roberto Valcarcel'};
+const TBN=Object.fromEntries(Object.entries(TURNOS).map(([k,v])=>[v,+k]));
+
+let CFG={obj:62,twd:25,execs:9,ncs:0,opps:0,sched:0,shown:0,asold:0,saved:false};
+let WD=1;
+let staged={},live={};
+HDG.forEach(n=>{staged[n]={leads:0,ao:0,ac:0,as:0,sales:0,soldLead:'0%'};});
+staged['__um']={sales:0};
+let filesLoaded={appt:false,leads:false,sales:false};
+let selV=null,vCharts={},hasRun=false;
+
+const ini=n=>n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const eomFn=s=>WD?Math.round(s/WD*CFG.twd):0;
+const pill=(t,c)=>`<span class="pill pill-${c}">${t}</span>`;
+
+// ===== SETUP =====
+function openSetup(){
+  document.getElementById('cfg-obj').value=CFG.obj||'';
+  document.getElementById('cfg-twd').value=CFG.twd||'';
+  document.getElementById('cfg-execs').value=CFG.execs||'';
+  document.getElementById('cfg-ncs').value=CFG.ncs||'';
+  document.getElementById('cfg-opps').value=CFG.opps||'';
+  document.getElementById('cfg-sched').value=CFG.sched||'';
+  document.getElementById('cfg-shown').value=CFG.shown||'';
+  document.getElementById('cfg-asold').value=CFG.asold||'';
+  // Hide cancel button on first load
+  document.getElementById('btn-cancel-setup').style.display=CFG.saved?'':'none';
+  document.getElementById('setup-overlay').classList.remove('hidden');
+}
+
+function closeSetup(){
+  if(!CFG.saved)return; // Cannot close without saving first time
+  document.getElementById('setup-overlay').classList.add('hidden');
+}
+
+function saveSetup(){
+  const obj=parseInt(document.getElementById('cfg-obj').value);
+  const twd=parseInt(document.getElementById('cfg-twd').value);
+  const execs=parseInt(document.getElementById('cfg-execs').value);
+  const ncs=parseInt(document.getElementById('cfg-ncs').value)||0;
+  const opps=parseInt(document.getElementById('cfg-opps').value)||0;
+  const sched=parseInt(document.getElementById('cfg-sched').value)||0;
+  const shown=parseInt(document.getElementById('cfg-shown').value)||0;
+  const asold=parseInt(document.getElementById('cfg-asold').value)||0;
+  if(!obj||!twd||!execs){alert('Monthly Objective, Total Working Days and Number of Executives are required.');return;}
+  CFG={obj,twd,execs,ncs,opps,sched,shown,asold,saved:true};
+  document.getElementById('wd-sep').textContent='/ '+twd;
+  document.getElementById('cfg-badge').textContent='Configured ✓';
+  document.getElementById('cfg-badge').className='cfg-badge';
+  document.getElementById('step0').className='step-chip done';
+  document.getElementById('setup-overlay').classList.add('hidden');
+  checkRunReady();
+  if(hasRun){renderResumen();renderVendedoresTab();}
+}
+
+// ===== RESET =====
+function resetAll(){
+  if(!confirm('This will clear all loaded files and configuration. Are you sure?'))return;
+  CFG={obj:62,twd:25,execs:9,ncs:0,opps:0,sched:0,shown:0,asold:0,saved:false};
+  WD=1;
+  HDG.forEach(n=>{staged[n]={leads:0,ao:0,ac:0,as:0,sales:0,soldLead:'0%'};});
+  staged['__um']={sales:0};
+  live={};filesLoaded={appt:false,leads:false,sales:false};
+  hasRun=false;selV=null;
+  ['badge-appt','badge-leads','badge-sales'].forEach(id=>document.getElementById(id).className='tbadge');
+  document.getElementById('wd-val').textContent='1';
+  document.getElementById('wd-sep').textContent='/ 25';
+  document.getElementById('cfg-badge').textContent='Required';
+  document.getElementById('cfg-badge').className='cfg-badge warn';
+  document.getElementById('run-btn').disabled=true;
+  document.getElementById('upload-log').innerHTML='';
+  try{document.getElementById('file-main').value='';}catch(e){}
+  try{document.getElementById('file-arch').value='';}catch(e){}
+  destroyCharts();
+  document.getElementById('resumen-content').innerHTML=`<div class="empty-state">
+    <div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+    <h3>No data loaded</h3>
+    <p>Start by clicking <strong>Setup</strong> to enter the monthly values, then upload the 3 CSV files and press Run.</p>
+    <div class="empty-steps">
+      <div class="step-chip" id="step0"><div class="sn">1</div>Setup Configuration</div>
+      <div class="step-chip" id="step1"><div class="sn">2</div>Appointment Report</div>
+      <div class="step-chip" id="step2"><div class="sn">3</div>New Leads by Rep</div>
+      <div class="step-chip" id="step3"><div class="sn">4</div>Sales Stats</div>
+      <div class="step-chip" id="step4"><div class="sn">5</div>Press Run</div>
+    </div></div>`;
+  document.getElementById('vendedores-content').innerHTML=`<div class="empty-state">
+    <div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+    <h3>No sales rep data</h3><p>Complete Setup, upload the files and press Run.</p></div>`;
+  showTab('resumen');
+  // Small delay so DOM is ready before opening modal
+  setTimeout(()=>openSetup(), 50);
+}
+
+// ===== WD STEPPER =====
+function changeWD(delta){
+  const nv=Math.min(CFG.twd,Math.max(1,WD+delta));
+  if(nv===WD)return;
+  WD=nv;
+  document.getElementById('wd-val').textContent=WD;
+  if(hasRun){renderResumen();if(selV==='__all__')renderAllTeam();else if(selV)renderVendorDetail(selV);}
+}
+
+// ===== CSV PARSING =====
+function parseCSV(txt){
+  const lines=txt.trim().split('\n').filter(l=>l.trim());
+  const hdrs=lines[0].split(',').map(h=>h.replace(/^\uFEFF/,'').trim());
+  return lines.slice(1).map(l=>{const v=l.split(',');const o={};hdrs.forEach((h,i)=>o[h]=(v[i]||'').trim().replace(/"/g,''));return o;});
+}
+
+function detectLoad(txt){
+  const rows=parseCSV(txt);if(!rows.length)return null;
+  const h=Object.keys(rows[0]);
+  if(h.includes('ApptsOpened')&&h.includes('ApptsCompleted')){
+    rows.filter(r=>r.RoleName==='Sales Person'&&HDG.includes(r.FullName)).forEach(r=>{
+      staged[r.FullName].ao=parseInt(r.ApptsOpened)||0;
+      staged[r.FullName].ac=parseInt(r.ApptsCompleted)||0;
+      staged[r.FullName].as=parseInt(r.OpenedSold)||0;
+    });
+    filesLoaded.appt=true;
+    document.getElementById('badge-appt').className='tbadge loaded';
+    document.getElementById('step1').className='step-chip done';
+    return 'Appointment Report';
+  }
+  if(h.includes('NewLeads')&&h.includes('vchAssignedName')){
+    rows.filter(r=>HDG.includes(r.vchAssignedName)).forEach(r=>{
+      staged[r.vchAssignedName].leads=parseInt(r.NewLeads)||0;
+      staged[r.vchAssignedName].soldLead=r.SoldLead||'0%';
+    });
+    filesLoaded.leads=true;
+    document.getElementById('badge-leads').className='tbadge loaded';
+    document.getElementById('step2').className='step-chip done';
+    return 'New Leads by Rep';
+  }
+  if(h.includes('Sold')&&h.includes('RoleName')&&h.includes('FullName')){
+    rows.filter(r=>r.RoleName==='Sales Person'&&HDG.includes(r.FullName)).forEach(r=>{staged[r.FullName].sales=parseInt(r.Sold)||0;});
+    const umSold=rows.filter(r=>r.RoleName==='Unique Motors').reduce((a,r)=>a+(parseInt(r.Sold)||0),0);
+    staged['__um'].sales=umSold;
+    filesLoaded.sales=true;
+    document.getElementById('badge-sales').className='tbadge loaded';
+    document.getElementById('step3').className='step-chip done';
+    return 'Sales Stats (By Team)';
+  }
+  return null;
+}
+
+function checkRunReady(){
+  const all=CFG.saved&&filesLoaded.appt&&filesLoaded.leads&&filesLoaded.sales;
+  document.getElementById('run-btn').disabled=!all;
+  if(all)document.getElementById('step4').className='step-chip ready';
+}
+
+// ===== RUN =====
+function runDashboard(){
+  live=JSON.parse(JSON.stringify(staged));
+  hasRun=true;selV=null;
+  document.getElementById('step4').className='step-chip done';
+  const btn=document.getElementById('run-btn');
+  btn.innerHTML=`<div class="play"><svg width="7" height="8" viewBox="0 0 8 10" fill="white"><path d="M1 1l6 4-6 4V1z"/></svg></div> Updated`;
+  setTimeout(()=>{btn.innerHTML=`<div class="play"><svg width="7" height="8" viewBox="0 0 8 10" fill="white"><path d="M1 1l6 4-6 4V1z"/></svg></div> Run`;},2200);
+  renderResumen();renderVendedoresTab();
+}
+
+// ===== RENDER OVERVIEW =====
+function renderResumen(){
+  const ncs=CFG.ncs,opps=CFG.opps,sched=CFG.sched,shown=CFG.shown,asold=CFG.asold;
+  const umSales=live['__um']?live['__um'].sales:0;
+  const ucDaily=WD?(umSales/WD).toFixed(2):'0.00';
+  const proj=WD?Math.round(ncs/WD*CFG.twd):0;
+  const crDec=opps?ncs/opps:0;
+  const cr=Math.round(crDec*100);
+  const schedPct=opps?Math.round(sched/opps*100):0;
+  const shownPct=sched?Math.round(shown/sched*100):0;
+  const asoldPct=shown?Math.round(asold/shown*100):0;
+  const salesThru=ncs?Math.round(asold/ncs*100):0;
+  const ncsD=WD?(ncs/WD).toFixed(2):'0.00';
+  const oppsEom=WD?Math.round(opps/WD*CFG.twd):0;
+  const schedTrend=WD?Math.round(sched/WD*CFG.twd):0;
+  const shownTrend=WD?Math.round(shown/WD*CFG.twd):0;
+  const asoldTrend=WD?Math.round(asold/WD*CFG.twd):0;
+  const indOppM=crDec?Math.round((CFG.obj/CFG.execs)/crDec):0;
+  const indOppD=CFG.twd?+(indOppM/CFG.twd).toFixed(1):0;
+  const byWD=+(indOppD*WD).toFixed(1);
+  const expSold=Math.round(indOppM*crDec);
+  const pace=Math.round(CFG.obj*WD/CFG.twd);
+
+  const kpis=[
+    {l:'New Cars Sales (MTD)',v:ncs,m:`Daily: ${ncsD}`,t:`Goal: ${CFG.obj}`,c:ncs>=pace?'good':'bad'},
+    {l:'Used Cars Sales (MTD)',v:umSales,m:`Daily: ${ucDaily}`,t:'',c:'neutral'},
+    {l:'Total Cars Sales (MTD)',v:ncs+umSales,m:`Daily: ${(CFG.obj/CFG.twd).toFixed(2)}`,t:`Goal: ${CFG.obj}`,c:(ncs+umSales)>=pace?'good':'bad'},
+    {l:'Projected Total Cars Sales',v:proj,m:`${WD} working days`,t:`Goal: ${CFG.obj}`,c:proj>=CFG.obj?'good':'bad'},
+    {l:'Acc. Mthly. Closing Ratio',v:cr+'%',m:`${ncs} sold / ${opps} oppties`,t:'Goal: ≥18%',c:cr>=18?'good':'bad'},
+    {l:'Sales Thru Appt / Total Sold (MTD)',v:salesThru+'%',m:`${asold} of ${ncs} via appt`,t:'Goal: >60%',c:salesThru>=60?'good':'bad'},
+    {l:'Total Oppties (MTD)',v:opps,m:'Leads in period',t:`EOM est: ${oppsEom}`,c:'neutral'},
+  ];
+
+  const sorted=[...HDG].sort((a,b)=>TBN[a]-TBN[b]);
+  const execRows=sorted.map(name=>{
+    const d=live[name];const p=name.split(' ');
+    const v1=d.leads-Math.round(byWD),v2=d.sales-expSold,e=eomFn(d.sales);
+    return `<tr>
+      <td class="tn">${TBN[name]}</td>
+      <td class="nc"><div class="fn">${p[0]}</div><div class="ln">${p.slice(1).join(' ')}</div></td>
+      <td>${pill(cr+'%','b')}</td><td>${indOppM}</td><td>${indOppD}</td><td>${byWD}</td>
+      <td><span class="${d.leads>=Math.round(byWD)?'ohi':'olo'}">${d.leads}</span></td>
+      <td><span class="${v1>=0?'vpos':'vneg'}">${v1>=0?'+':''}${v1}</span></td>
+      <td>${expSold}</td><td><strong>${d.sales}</strong></td>
+      <td><span class="${v2>=0?'vpos':'vneg'}">${v2>=0?'+':''}${v2}</span></td>
+      <td><span class="${e>=10?'ehi':'eze'}">${e}</span></td>
+    </tr>`;
+  }).join('')+
+  `<tr class="vacant"><td>—</td><td class="nc"><div class="fn">Vacant</div></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+   <tr class="house"><td>—</td><td class="nc"><div class="fn">House</div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td><span class="eze">0</span></td></tr>
+   <tr class="um"><td>—</td><td class="nc"><div class="fn" style="color:#7c4a00;">UM Sales</div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td style="color:#7c4a00;font-weight:700;">${live['__um']?live['__um'].sales:0}</td><td></td><td><span class="eze">${live['__um']?eomFn(live['__um'].sales):0}</span></td></tr>`;
+
+  // Table 2 — individual closing ratio per rep (SoldLead from New Leads CSV)
+  const execRows2=sorted.map(name=>{
+    const d=live[name];const p=name.split(' ');
+    const crIndPct=d.soldLead||'0%';
+    const crIndDec=parseFloat(crIndPct)/100||0;
+    const indOppM2=crIndDec?Math.round((CFG.obj/CFG.execs)/crIndDec):0;
+    const indOppD2=CFG.twd?+(indOppM2/CFG.twd).toFixed(1):0;
+    const byWD2=+(indOppD2*WD).toFixed(1);
+    const expSold2=Math.round(indOppM2*crIndDec);
+    const v1b=d.leads-Math.round(byWD2),v2b=d.sales-expSold2,e2=eomFn(d.sales);
+    return `<tr>
+      <td class="tn">${TBN[name]}</td>
+      <td class="nc"><div class="fn">${p[0]}</div><div class="ln">${p.slice(1).join(' ')}</div></td>
+      <td>${pill(crIndPct,'b')}</td>
+      <td>${indOppM2}</td><td>${indOppD2}</td><td>${byWD2}</td>
+      <td><span class="${d.leads>=Math.round(byWD2)?'ohi':'olo'}">${d.leads}</span></td>
+      <td><span class="${v1b>=0?'vpos':'vneg'}">${v1b>=0?'+':''}${v1b}</span></td>
+      <td>${expSold2}</td><td><strong>${d.sales}</strong></td>
+      <td><span class="${v2b>=0?'vpos':'vneg'}">${v2b>=0?'+':''}${v2b}</span></td>
+      <td><span class="${e2>=10?'ehi':'eze'}">${e2}</span></td>
+    </tr>`;
+  }).join('')+
+  `<tr class="vacant"><td>—</td><td class="nc"><div class="fn">Vacant</div></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+   <tr class="house"><td>—</td><td class="nc"><div class="fn">House</div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td><span class="eze">0</span></td></tr>
+   <tr class="um"><td>—</td><td class="nc"><div class="fn" style="color:#7c4a00;">UM Sales</div></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td style="color:#7c4a00;font-weight:700;">${live['__um']?live['__um'].sales:0}</td><td></td><td><span class="eze">${live['__um']?eomFn(live['__um'].sales):0}</span></td></tr>`;
+
+  document.getElementById('resumen-content').innerHTML=`
+    <div class="toast">
+      <div class="tick"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><div style="font-weight:700;">Dashboard updated</div><div style="font-size:10px;opacity:.6;margin-top:1px;">3 files processed · ${new Date().toLocaleTimeString('en-US')}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:6px;align-items:stretch;">
+      ${[...kpis,
+        {l:'Scheduled Sales Appt. (MTD)',v:schedPct+'%',m:`${sched} appts`,t:'Goal: 20-30%',c:schedPct>=20&&schedPct<=30?'good':'bad'},
+        {l:'Shown Sales Appt. (MTD)',v:shownPct+'%',m:`${shown} appts`,t:'Goal: >60%',c:shownPct>=60?'good':'bad'},
+        {l:'Appt Sold (MTD)',v:asoldPct+'%',m:`${asold} of shown`,t:'Goal: >30%',c:asoldPct>=30?'good':'bad'},
+      ].map(c=>`<div class="kc ${c.c}" style="padding:10px;display:flex;flex-direction:column;"><div class="acc"></div><div class="kl" style="font-size:8px;height:22px;display:flex;align-items:flex-start;">${c.l}</div><div class="kv" style="font-size:18px;flex:1;display:flex;align-items:center;">${c.v}</div><div class="km" style="font-size:8px;">${c.m}</div><div class="ktarget" style="font-size:8px;">${c.t}</div></div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:10px;align-items:center;">
+      ${[{l:'New Cars Sales (Daily)',v:(CFG.obj/CFG.twd).toFixed(2)},{l:'Used Cars Sales (Daily)',v:ucDaily},{l:'Total Cars Sales (Daily)',v:(CFG.obj/CFG.twd).toFixed(2)},{l:'Objective Total Cars Sales',v:CFG.obj},{l:'Working Days',v:`${WD} / ${CFG.twd}`}].map(d=>`<div style="background:var(--color-background-secondary);border-radius:var(--rs);padding:8px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;"><div style="font-size:8px;color:var(--color-text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">${d.l}</div><div style="font-size:13px;font-weight:800;color:var(--color-text-primary);">${d.v}</div></div>`).join('')}
+      <div></div>
+      <div style="display:flex;align-items:center;justify-content:center;"><span style="font-size:10px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.7px;">Trends &gt;&gt;</span></div>
+      <div class="trend-chip" style="min-width:0;width:100%;border-radius:6px;padding:8px 4px;"><div class="tv" style="font-size:16px;">${schedTrend}</div><div class="tl">Scheduled</div></div>
+      <div class="trend-chip" style="min-width:0;width:100%;border-radius:6px;padding:8px 4px;"><div class="tv" style="font-size:16px;">${shownTrend}</div><div class="tl">Shown</div></div>
+      <div class="trend-chip" style="min-width:0;width:100%;border-radius:6px;padding:8px 4px;"><div class="tv" style="font-size:16px;">${asoldTrend}</div><div class="tl">Appt Sold</div></div>
+    </div>
+    <div class="sec-hd"><span>Sales Executives</span><div class="line"></div></div>
+    <div class="legend-bar">
+      <span style="font-size:10px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;">Legend:</span>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green);"></div>Above</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--red);"></div>Below</div>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr class="hdr-row">
+        <th style="width:32px;">Turn</th>
+        <th style="text-align:left;min-width:140px;">Lead Management<br>Sales Executive</th>
+        <th>New Cars Sales<br>Ind. Closing Ratio</th>
+        <th>New Cars Sales<br>Ind. Opp. Expected (M)</th>
+        <th>New Cars Sales<br>Ind. Opp. Expected (D)</th>
+        <th>By Working<br>Days</th>
+        <th class="grp">MTD NCS<br>Opp. Registered</th>
+        <th class="grp">Varinc<br>(+/-)</th>
+        <th class="grp">MTD NCS<br>Expected Sold</th>
+        <th class="grp">MTD NCS<br>Actual Sold</th>
+        <th class="grp">Varinc<br>(+/-)</th>
+        <th class="grp">EOM NCS<br>Total Sales</th>
+      </tr></thead>
+      <tbody>${execRows}</tbody>
+    </table></div>
+    <div class="sec-hd" style="margin-top:20px;"><span>Sales Executives — Individual Closing Ratio</span><div class="line"></div></div>
+    <div class="legend-bar">
+      <span style="font-size:10px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;">Legend:</span>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green);"></div>Above</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--red);"></div>Below</div>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr class="hdr-row">
+        <th style="width:32px;">Turn</th>
+        <th style="text-align:left;min-width:140px;">Lead Management<br>Sales Executive</th>
+        <th>New Cars Sales<br>Ind. Closing Ratio</th>
+        <th>New Cars Sales<br>Ind. Opp. Expected (M)</th>
+        <th>New Cars Sales<br>Ind. Opp. Expected (D)</th>
+        <th>By Working<br>Days</th>
+        <th class="grp">MTD NCS<br>Opp. Registered</th>
+        <th class="grp">Varinc<br>(+/-)</th>
+        <th class="grp">MTD NCS<br>Expected Sold</th>
+        <th class="grp">MTD NCS<br>Actual Sold</th>
+        <th class="grp">Varinc<br>(+/-)</th>
+        <th class="grp">EOM NCS<br>Total Sales</th>
+      </tr></thead>
+      <tbody>${execRows2}</tbody>
+    </table></div>`;
+}
+
+// ===== RENDER BY SALES REP =====
+function renderVendedoresTab(){
+  const sorted=[...HDG].sort((a,b)=>TBN[a]-TBN[b]);
+  const totalSales=HDG.reduce((a,n)=>a+live[n].sales,0);
+  const allCard=`<div class="vcard all-card ${selV==='__all__'?'sel':''}" onclick="selectAllTeam()">
+    <div class="av all-av">ALL</div><div class="vn">Team</div><div class="vt">All</div>
+    <div class="vs" style="color:var(--bt)">${totalSales} sold</div></div>`;
+  const cards=sorted.map(name=>{
+    const s=live[name].sales;
+    const col=s>=7?'var(--gt)':'var(--rt)';
+    return `<div class="vcard ${selV===name?'sel':''}" onclick="selectV('${name}')">
+      <div class="av">${ini(name)}</div>
+      <div class="vn">${name.split(' ')[0]}</div>
+      <div class="vt">Turn ${TBN[name]}</div>
+      <div class="vs" style="color:${col}">${s} sold</div></div>`;
+  }).join('');
+  document.getElementById('vendedores-content').innerHTML=`
+    <div class="vlegend">
+      <span style="font-size:10px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;">Legend:</span>
+      <div class="vleg-chip"><div class="vleg-dot" style="background:var(--green);"></div>7+ sold — Above</div>
+      <div class="vleg-chip"><div class="vleg-dot" style="background:var(--red);"></div>0–6 sold — Below</div>
+    </div>
+    <div class="vgrid">${allCard}${cards}</div>
+    <div id="vdetail"><div style="text-align:center;padding:30px;color:var(--color-text-tertiary);font-size:12px;">Select a sales rep or "Team" to view their metrics</div></div>`;
+  if(selV==='__all__')renderAllTeam();
+  else if(selV)renderVendorDetail(selV);
+}
+
+function destroyCharts(){Object.values(vCharts).forEach(c=>{try{c.destroy();}catch(e){}});vCharts={};}
+function selectV(name){if(!hasRun)return;selV=name;renderVendedoresTab();}
+function selectAllTeam(){selV='__all__';renderVendedoresTab();}
+
+function renderVendorDetail(name){
+  destroyCharts();
+  const d=live[name];
+  const e=eomFn(d.sales);
+  const showR=d.ao?Math.round(d.ac/d.ao*100):0;
+  const crDec=CFG.opps?CFG.ncs/CFG.opps:0;
+  const cr=Math.round(crDec*100);
+  const indOppM=crDec?Math.round((CFG.obj/CFG.execs)/crDec):0;
+  const indOppD=CFG.twd?+(indOppM/CFG.twd).toFixed(1):0;
+  const byWD=+(indOppD*WD).toFixed(1);
+  const expSold=Math.round(indOppM*crDec);
+  const v1=d.leads-Math.round(byWD),v2=d.sales-expSold;
+  const ec=e>=10?'g':'r';
+  document.getElementById('vdetail').innerHTML=`
+    <div class="vdhdr">
+      <div class="vd-av">${ini(name)}</div>
+      <div><div class="vd-nm">${name}</div><div class="vd-meta">Turn ${TBN[name]} · Closing Ratio: ${cr}% · Show Rate: ${showR}% · Opp. Varinc: ${v1>=0?'+':''}${v1}</div></div>
+      <div class="vd-stats">
+        <div class="vd-s"><div class="sv">${d.sales}</div><div class="sl">NCS Sold</div></div>
+        <div class="vd-s"><div class="sv">${e}</div><div class="sl">EOM Proj.</div></div>
+        <div class="vd-s"><div class="sv">${d.leads}</div><div class="sl">Oppties</div></div>
+        <div class="vd-s"><div class="sv">${d.ao}</div><div class="sl">Appts</div></div>
+      </div>
+    </div>
+    <div class="mgrid">
+      <div class="mcard ${d.leads>=Math.round(byWD)?'g':'r'}"><div class="ml">MTD NCS Opp. Registered</div><div class="mv">${d.leads}</div></div>
+      <div class="mcard ${cr>=18?'g':'r'}"><div class="ml">NCS Ind. Closing Ratio</div><div class="mv">${cr}%</div></div>
+      <div class="mcard ${d.sales>=expSold?'g':'r'}"><div class="ml">MTD NCS Actual Sold</div><div class="mv">${d.sales}</div></div>
+      <div class="mcard ${ec}"><div class="ml">EOM NCS Total Sales</div><div class="mv">${e}</div></div>
+      <div class="mcard"><div class="ml">Scheduled Sales Appt. (MTD)</div><div class="mv">${d.ao}</div></div>
+      <div class="mcard ${showR>=60?'g':'r'}"><div class="ml">Shown Sales Appt. (MTD)</div><div class="mv">${d.ac}</div></div>
+      <div class="mcard ${d.as>0?'g':'r'}"><div class="ml">Appt Sold (MTD)</div><div class="mv">${d.as}</div></div>
+      <div class="mcard ${v1>=0?'g':'r'}"><div class="ml">MTD NCS Opp. Varinc (+/-)</div><div class="mv">${v1>=0?'+':''}${v1}</div></div>
+      <div class="mcard ${v2>=0?'g':'r'}"><div class="ml">MTD NCS Sales Varinc (+/-)</div><div class="mv">${v2>=0?'+':''}${v2}</div></div>
+    </div>
+    <div class="cgrid">
+      <div class="ccard"><div class="ctitle">Oppties &amp; NCS Sold — Expected vs Actual</div>
+        <div style="position:relative;height:180px;"><canvas id="cv1"></canvas></div></div>
+      <div class="ccard"><div class="ctitle">Sales Appt. Funnel</div>
+        <div style="position:relative;height:180px;"><canvas id="cv2"></canvas></div></div>
+    </div>
+    <div class="ccard" style="margin-bottom:12px;">
+      <div class="ctitle">Sales Ranking — Full Team</div>
+      <div style="position:relative;height:${HDG.length*36+50}px;"><canvas id="cv3"></canvas></div></div>`;
+  const bO={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:'#475569'}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#94a3b8'}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},color:'#94a3b8'},beginAtZero:true}}};
+  setTimeout(()=>{
+    // Merged chart: Oppties group + NCS Sold group side by side
+    const c1=document.getElementById('cv1');
+    if(c1)vCharts.c1=new Chart(c1,{type:'bar',data:{
+      labels:['Oppties','NCS Sold'],
+      datasets:[
+        {label:'Expected',data:[indOppM, expSold],backgroundColor:'#bfdbfe',borderRadius:6,barThickness:36},
+        {label:'Actual',data:[d.leads, d.sales],backgroundColor:['#1a9e5c','#0f2a4a'],borderRadius:6,barThickness:36}
+      ]},options:bO});
+    // Appt Funnel back
+    const c2=document.getElementById('cv2');
+    if(c2)vCharts.c2=new Chart(c2,{type:'bar',data:{
+      labels:['Scheduled','Shown','Appt Sold'],
+      datasets:[{data:[d.ao,d.ac,d.as],backgroundColor:['#3b82f6','#d97706','#1a9e5c'],borderRadius:6,barThickness:44}]
+    },options:{...bO,plugins:{legend:{display:false}}}});
+    const s2=[...HDG].sort((a,b)=>live[b].sales-live[a].sales);
+    const c3=document.getElementById('cv3');
+    if(c3)vCharts.c3=new Chart(c3,{type:'bar',data:{labels:s2.map(n=>n.split(' ')[0]),datasets:[{data:s2.map(n=>live[n].sales),backgroundColor:s2.map(n=>n===name?'#0f2a4a':'#bfdbfe'),borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:10},color:'#94a3b8'},beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:10},color:'#475569'}}}}});
+  },80);
+}
+
+function renderAllTeam(){
+  destroyCharts();
+  const ts=HDG.reduce((a,n)=>a+live[n].sales,0);
+  const tl=HDG.reduce((a,n)=>a+live[n].leads,0);
+  const tao=HDG.reduce((a,n)=>a+live[n].ao,0);
+  const tac=HDG.reduce((a,n)=>a+live[n].ac,0);
+  const tas=HDG.reduce((a,n)=>a+live[n].as,0);
+  const cr=Math.round(CFG.opps?CFG.ncs/CFG.opps*100:0);
+  const showR=tao?Math.round(tac/tao*100):0;
+  const proj=eomFn(ts);
+  const sorted=[...HDG].sort((a,b)=>live[b].sales-live[a].sales);
+  document.getElementById('vdetail').innerHTML=`
+    <div class="vdhdr">
+      <div class="vd-av" style="font-size:12px;">TEAM</div>
+      <div><div class="vd-nm">Full Team</div><div class="vd-meta">${CFG.execs} executives · Closing Ratio: ${cr}% · Show Rate: ${showR}%</div></div>
+      <div class="vd-stats">
+        <div class="vd-s"><div class="sv">${ts}</div><div class="sl">NCS Sold</div></div>
+        <div class="vd-s"><div class="sv">${proj}</div><div class="sl">EOM Proj.</div></div>
+        <div class="vd-s"><div class="sv">${tl}</div><div class="sl">Oppties</div></div>
+        <div class="vd-s"><div class="sv">${tao}</div><div class="sl">Appts</div></div>
+      </div>
+    </div>
+    <div class="mgrid">
+      <div class="mcard ${cr>=18?'g':'r'}"><div class="ml">Acc. Mthly. Closing Ratio</div><div class="mv">${cr}%</div></div>
+      <div class="mcard ${ts>=10?'g':'r'}"><div class="ml">MTD NCS Actual Sold</div><div class="mv">${ts}</div></div>
+      <div class="mcard ${proj>=CFG.obj?'g':'r'}"><div class="ml">EOM NCS Total Sales</div><div class="mv">${proj}</div></div>
+      <div class="mcard"><div class="ml">Total Oppties (MTD)</div><div class="mv">${tl}</div></div>
+      <div class="mcard"><div class="ml">Scheduled Sales Appt. (MTD)</div><div class="mv">${tao}</div></div>
+      <div class="mcard ${showR>=60?'g':'r'}"><div class="ml">Shown Sales Appt. (MTD)</div><div class="mv">${tac}</div></div>
+      <div class="mcard ${tas>0?'g':'r'}"><div class="ml">Appt Sold (MTD)</div><div class="mv">${tas}</div></div>
+    </div>
+    <div class="ccard" style="margin-bottom:12px;">
+      <div class="ctitle">Sales Ranking — Full Team</div>
+      <div style="position:relative;height:${HDG.length*40+60}px;"><canvas id="cv-team"></canvas></div>
+    </div>
+    <div class="cgrid">
+      <div class="ccard"><div class="ctitle">Oppties vs NCS Sold</div>
+        <div style="position:relative;height:180px;"><canvas id="cv-leads"></canvas></div></div>
+      <div class="ccard"><div class="ctitle">Sales Appt. Funnel</div>
+        <div style="position:relative;height:180px;"><canvas id="cv-citas"></canvas></div></div>
+    </div>`;
+  setTimeout(()=>{
+    const colors=sorted.map(n=>live[n].sales>=7?'#1a9e5c':'#d93b3b');
+    const ct=document.getElementById('cv-team');
+    if(ct)vCharts.ct=new Chart(ct,{type:'bar',data:{labels:sorted.map(n=>n.split(' ')[0]),datasets:[{data:sorted.map(n=>live[n].sales),backgroundColor:colors,borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:10},color:'#94a3b8'},beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:10},color:'#475569'}}}}});
+    const cl=document.getElementById('cv-leads');
+    if(cl)vCharts.cl=new Chart(cl,{type:'bar',data:{labels:['Oppties','NCS Sold'],datasets:[{data:[tl,ts],backgroundColor:['#3b82f6','#1a9e5c'],borderRadius:6,barThickness:48}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#94a3b8'}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},color:'#94a3b8'},beginAtZero:true}}}});
+    const cc=document.getElementById('cv-citas');
+    if(cc)vCharts.cc=new Chart(cc,{type:'bar',data:{labels:['Scheduled','Shown','Appt Sold'],datasets:[{data:[tao,tac,tas],backgroundColor:['#3b82f6','#d97706','#1a9e5c'],borderRadius:6,barThickness:48}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#94a3b8'}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},color:'#94a3b8'},beginAtZero:true}}}});
+  },80);
+}
+
+// ===== FILE HANDLING =====
+function handleFiles(files){
+  const log=document.getElementById('upload-log');
+  Array.from(files).forEach(file=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      const txt=ev.target.result;
+      // Check if it's the Monthly Sales CSV first
+      const firstLine=txt.split('\n')[0]||'';
+      if(firstLine.includes('Sperson1_name')&&firstLine.includes('Selling_price')){
+        loadMonthlySales(txt);
+        return;
+      }
+      const type=detectLoad(txt);
+      const item=document.createElement('div');item.className='uitem';
+      if(type){
+        item.innerHTML=`<div class="fi"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><div class="ufname">${file.name}</div><div class="uftype">${type} — ready for Run</div></div>
+          <span class="pill pill-g" style="flex-shrink:0;margin-left:8px;">Loaded</span>`;
+      }else{
+        item.innerHTML=`<div class="fi" style="background:var(--rl);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="#d93b3b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><div class="ufname">${file.name}</div><div class="uftype err">Format not recognized</div></div>
+          <span class="pill pill-r" style="flex-shrink:0;margin-left:8px;">Error</span>`;
+      }
+      log.prepend(item);checkRunReady();
+    };r.readAsText(file);
+  });
+}
+
+function showTab(name){
+  ['resumen','vendedores','monthly','archivos'].forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===name);
+    document.getElementById('tab-'+t).classList.toggle('active',t===name);
+  });
+  if(name==='monthly' && monthlyData.length) renderMonthlySales();
+}
+
+// ===== MONTHLY SALES =====
+let monthlyData=[];
+let msFilters={rep:'all',model:'all'};
+let msCharts={};
+
+function cleanPrice(val){
+  if(!val)return 0;
+  const s=String(val).replace(/[$,\s]/g,'').trim();
+  if(s.startsWith('(')&&s.endsWith(')'))return -(parseFloat(s.slice(1,-1))||0);
+  return parseFloat(s)||0;
+}
+
+function loadMonthlySales(txt){
+  const lines=txt.trim().split('\n').filter(l=>l.trim());
+  if(lines.length<2)return;
+  const hdrs=lines[0].split(',').map(h=>h.replace(/^\uFEFF/,'').trim().replace(/"/g,''));
+  const rows=lines.slice(1).map(l=>{
+    const vals=[];let cur='';let inQ=false;
+    for(const c of l){
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){vals.push(cur.trim());cur='';}
+      else{cur+=c;}
+    }
+    vals.push(cur.trim());
+    const o={};hdrs.forEach((h,i)=>o[h]=(vals[i]||'').replace(/"/g,'').trim());
+    return o;
+  });
+
+  monthlyData=rows
+    .filter(r=>r.VIN&&r.VIN.length>5)
+    .map(r=>({
+      date:r.Sale_date||'',
+      rep:(r.Sperson1_name||'Unknown').trim(),
+      vin:r.VIN||'',
+      model:(r.Model||'Unknown').trim(),
+      selling:cleanPrice(r.Selling_price),
+      original:cleanPrice(r.Original_price),
+      gross:cleanPrice(r.Diff),
+      status:r.Deal_status||''
+    }));
+
+  const log=document.getElementById('upload-log-monthly');
+  if(log){
+    log.innerHTML='';
+    const item=document.createElement('div');
+    item.className='uitem';
+    item.innerHTML=`<div class="fi"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><div class="ufname">Monthly Sales Reports</div><div class="uftype">${monthlyData.length} records loaded</div></div>
+      <span class="pill pill-g" style="flex-shrink:0;margin-left:8px;">Loaded</span>`;
+    log.appendChild(item);
+  }
+
+  msFilters={rep:'all',model:'all'};
+  showTab('monthly');
+  renderMonthlySales();
+}
+
+function renderMonthlySales(){
+  if(!monthlyData.length)return;
+
+  const filtered=monthlyData.filter(d=>
+    (msFilters.rep==='all'||d.rep===msFilters.rep)&&
+    (msFilters.model==='all'||d.model===msFilters.model)
+  );
+
+  const totalUnits=filtered.length;
+  const totalSelling=filtered.reduce((a,d)=>a+d.selling,0);
+  const totalGross=filtered.reduce((a,d)=>a+d.gross,0);
+  const avgPrice=totalUnits?totalSelling/totalUnits:0;
+
+  const allReps=[...new Set(monthlyData.map(d=>d.rep))].filter(r=>r!=='Unknown').sort();
+  const allModels=[...new Set(monthlyData.map(d=>d.model))].sort();
+
+  const byRep={};
+  filtered.forEach(d=>{
+    if(!byRep[d.rep])byRep[d.rep]={units:0,selling:0,gross:0};
+    byRep[d.rep].units++;byRep[d.rep].selling+=d.selling;byRep[d.rep].gross+=d.gross;
+  });
+  const repsSorted=Object.entries(byRep).sort((a,b)=>b[1].units-a[1].units);
+
+  const byModel={};
+  filtered.forEach(d=>{
+    if(!byModel[d.model])byModel[d.model]={units:0,selling:0,gross:0};
+    byModel[d.model].units++;byModel[d.model].selling+=d.selling;byModel[d.model].gross+=d.gross;
+  });
+  const modelsSorted=Object.entries(byModel).sort((a,b)=>b[1].units-a[1].units);
+
+  const byDay={};
+  filtered.forEach(d=>{
+    if(!byDay[d.date])byDay[d.date]={units:0,selling:0};
+    byDay[d.date].units++;byDay[d.date].selling+=d.selling;
+  });
+  const daysSorted=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0]));
+
+  const fmt=n=>{
+    const abs=Math.abs(n);
+    const s='$'+abs.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+    return n<0?'-'+s:s;
+  };
+
+  const mc=document.getElementById('monthly-content');
+
+  // First render — build full skeleton with permanent canvas containers
+  if(!mc.querySelector('#ms-shell')){
+    mc.innerHTML=`
+      <div id="ms-shell">
+        <div id="ms-filters" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;"></div>
+        <div id="ms-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div class="ccard"><div class="ctitle">Units by Sales Rep</div>
+            <div id="ms-rep-wrap" style="position:relative;height:240px;"><canvas id="ms-rep"></canvas></div></div>
+          <div class="ccard"><div class="ctitle">Units by Model</div>
+            <div id="ms-model-wrap" style="position:relative;height:240px;"><canvas id="ms-model"></canvas></div></div>
+        </div>
+        <div class="ccard" style="margin-bottom:14px;"><div class="ctitle">Daily Sales — Units &amp; Revenue</div>
+          <div style="position:relative;height:200px;"><canvas id="ms-daily"></canvas></div></div>
+        <div class="sec-hd"><span>Transaction Detail</span><div class="line"></div></div>
+        <div id="ms-table"></div>
+      </div>`;
+  }
+
+  // Always update filters
+  document.getElementById('ms-filters').innerHTML=`
+    <span style="font-size:9px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.6px;">Filter:</span>
+    <select onchange="msFilters.rep=this.value;renderMonthlySales()" style="padding:6px 10px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:11px;font-family:'Segoe UI',system-ui,sans-serif;outline:none;">
+      <option value="all">All Sales Reps</option>
+      ${allReps.map(r=>`<option value="${r}"${msFilters.rep===r?' selected':''}>${r}</option>`).join('')}
+    </select>
+    <select onchange="msFilters.model=this.value;renderMonthlySales()" style="padding:6px 10px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:11px;font-family:'Segoe UI',system-ui,sans-serif;outline:none;">
+      <option value="all">All Models</option>
+      ${allModels.map(m=>`<option value="${m}"${msFilters.model===m?' selected':''}>${m}</option>`).join('')}
+    </select>
+    ${msFilters.rep!=='all'||msFilters.model!=='all'?`<button onclick="msFilters={rep:'all',model:'all'};renderMonthlySales()" style="padding:6px 12px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);font-size:11px;cursor:pointer;font-family:'Segoe UI',system-ui,sans-serif;">✕ Clear</button>`:''}`;
+
+  // Always update KPIs
+  document.getElementById('ms-kpis').innerHTML=`
+    <div class="kc neutral"><div class="acc"></div><div class="kl">Total Units Sold</div><div class="kv" style="font-size:28px;">${totalUnits}</div><div class="km">vehicles</div></div>
+    <div class="kc neutral"><div class="acc"></div><div class="kl">Total Selling Price</div><div class="kv" style="font-size:20px;">${fmt(totalSelling)}</div><div class="km">total revenue</div></div>
+    <div class="kc ${totalGross>=0?'good':'bad'}"><div class="acc"></div><div class="kl">Total Front Gross</div><div class="kv" style="font-size:20px;">${fmt(totalGross)}</div><div class="km">${totalGross>=0?'above cost':'below cost'}</div></div>
+    <div class="kc neutral"><div class="acc"></div><div class="kl">Avg. Selling Price</div><div class="kv" style="font-size:20px;">${fmt(avgPrice)}</div><div class="km">per unit</div></div>`;
+
+  // Always update table
+  document.getElementById('ms-table').innerHTML=`
+    <div class="tbl-wrap"><table class="tbl" style="min-width:700px;">
+      <thead><tr class="hdr-row">
+        <th style="text-align:left;">Date</th>
+        <th style="text-align:left;">Sales Rep</th>
+        <th style="text-align:left;">Model</th>
+        <th>Selling Price</th>
+        <th>Original Price</th>
+        <th>Front Gross</th>
+        <th style="text-align:left;">VIN</th>
+      </tr></thead>
+      <tbody>
+        ${filtered.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(d=>`
+          <tr>
+            <td style="text-align:left;">${d.date}</td>
+            <td style="text-align:left;font-weight:600;color:var(--navy2);">${d.rep}</td>
+            <td style="text-align:left;">${d.model}</td>
+            <td>${fmt(d.selling)}</td>
+            <td style="color:var(--color-text-secondary);">${fmt(d.original)}</td>
+            <td style="font-weight:700;color:${d.gross>0?'var(--gt)':d.gross<0?'var(--rt)':'var(--color-text-secondary)'};">${fmt(d.gross)}</td>
+            <td style="text-align:left;font-weight:600;color:var(--navy2);">${d.vin}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+
+  // Destroy old charts and redraw on the SAME persistent canvas elements
+  Object.values(msCharts).forEach(c=>{try{c.destroy();}catch(e){}});
+  msCharts={};
+
+  const hOpts={indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:9},color:'#94a3b8'}},y:{grid:{display:false},ticks:{font:{size:10},color:'#475569'}}}};
+  const yOpts=(pos,label,color)=>({position:pos,beginAtZero:true,grid:{color:pos==='left'?'rgba(0,0,0,.04)':'transparent'},ticks:{font:{size:9},color,callback:pos==='right'?v=>'$'+v.toLocaleString():undefined},title:{display:true,text:label,font:{size:9},color}});
+
+  const rc=document.getElementById('ms-rep');
+  if(rc) msCharts.rep=new Chart(rc,{type:'bar',data:{
+    labels:repsSorted.map(([r])=>r),
+    datasets:[{data:repsSorted.map(([,v])=>v.units),backgroundColor:repsSorted.map(([,v])=>v.gross>=0?'#1a9e5c':'#d93b3b'),borderRadius:5}]
+  },options:hOpts});
+
+  const mc2=document.getElementById('ms-model');
+  if(mc2) msCharts.model=new Chart(mc2,{type:'bar',data:{
+    labels:modelsSorted.map(([m])=>m),
+    datasets:[{data:modelsSorted.map(([,v])=>v.units),backgroundColor:'#1a3c6e',borderRadius:5}]
+  },options:hOpts});
+
+  const dc=document.getElementById('ms-daily');
+  if(dc) msCharts.daily=new Chart(dc,{type:'bar',data:{
+    labels:daysSorted.map(([d])=>d.slice(5)),
+    datasets:[
+      {label:'Units',data:daysSorted.map(([,v])=>v.units),backgroundColor:'#1a3c6e',borderRadius:4,yAxisID:'y'},
+      {label:'Revenue',data:daysSorted.map(([,v])=>v.selling),type:'line',borderColor:'#1a9e5c',backgroundColor:'rgba(26,158,92,.1)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:'#1a9e5c',yAxisID:'y1'}
+    ]
+  },options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10},color:'#475569'}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9},color:'#94a3b8'}},
+      y:yOpts('left','Units','#94a3b8'),
+      y1:yOpts('right','Revenue','#1a9e5c')
+    }
+  }});
+}
+
+// ===== INIT =====
+document.getElementById('file-main').addEventListener('change',e=>handleFiles(e.target.files));
+document.getElementById('file-arch').addEventListener('change',e=>handleFiles(e.target.files));
+document.getElementById('file-monthly').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>loadMonthlySales(ev.target.result);
+  r.readAsText(file);
+});
+document.getElementById('fecha-hoy').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+openSetup();
+</script>
