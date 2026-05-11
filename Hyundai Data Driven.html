@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Hyundai Connect PR</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI';
+  background:linear-gradient(135deg,#002c5f,#0057b8);
+  color:#1f2937;
+}
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:40px;
+}
+.header{
+  text-align:center;
+  color:white;
+  margin-bottom:30px;
+}
+.header p{
+  margin:4px 0 0;
+  opacity:0.8;
+  font-size:14px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:25px;
+}
+.card{
+  background:white;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+.card h3{
+  margin-top:0;
+  color:#002c5f;
+}
+.drop{
+  border:2px dashed #cbd5e1;
+  padding:30px;
+  text-align:center;
+  border-radius:12px;
+  cursor:pointer;
+  transition:0.3s;
+}
+.drop:hover{
+  border-color:#0057b8;
+  background:#f0f7ff;
+}
+input[type=file]{ display:none; }
+.counter{
+  display:none;
+  margin-top:12px;
+  padding:10px 14px;
+  background:#f0f7ff;
+  border:1px solid #bfdbfe;
+  border-radius:8px;
+  font-size:13px;
+  color:#002c5f;
+  font-weight:600;
+}
+.counter span{
+  font-size:20px;
+  font-weight:700;
+  color:#0057b8;
+  margin-right:6px;
+}
+.btn{
+  display:block;
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:14px;
+}
+.primary{ background:#002c5f; color:white; }
+.primary:hover:not(:disabled){ background:#001633; }
+.primary:disabled{ background:#94a3b8; cursor:not-allowed; }
+.reset{ background:#e5e7eb; color:#374151; }
+.status{
+  display:none;
+  margin-top:10px;
+  padding:10px 14px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:600;
+  text-align:center;
+}
+.status.ok  { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+.status.err { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+.status.warn{ background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
+.table-wrap{
+  margin-top:15px;
+  overflow-x:auto;
+  border-radius:8px;
+  border:1px solid #e5e7eb;
+}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+.table th{
+  background:#002c5f;
+  color:white;
+  padding:8px 10px;
+  text-align:left;
+  white-space:nowrap;
+}
+.table td{
+  padding:7px 10px;
+  border-bottom:1px solid #f1f5f9;
+  white-space:nowrap;
+}
+.table tr:last-child td{ border-bottom:none; }
+.table tr:nth-child(even) td{ background:#f8fafc; }
+.preview-label{
+  margin-top:16px;
+  margin-bottom:6px;
+  font-size:12px;
+  color:#64748b;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+.progress-wrap{ display:none; margin-top:10px; }
+.progress-bar-bg{
+  background:#e5e7eb;
+  border-radius:6px;
+  height:8px;
+  overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;
+  background:#0057b8;
+  border-radius:6px;
+  width:0%;
+  transition:width 0.3s;
+}
+.progress-text{
+  font-size:12px;
+  color:#64748b;
+  margin-top:4px;
+  text-align:center;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>HYUNDAI CONNECT PR</h1>
+    <p>Upload seguro de Sales y Visits</p>
+  </div>
+
+  <div class="grid">
+    <!-- SALES -->
+    <div class="card">
+      <h3>📊 Sales Upload</h3>
+      <div class="drop" onclick="document.getElementById('salesFile').click()">
+        📂 Click o arrastra archivo Sales (.xlsx)
+      </div>
+      <input type="file" id="salesFile" accept=".xlsx,.xls">
+      <div class="counter" id="salesCounter">
+        <span id="salesCount">0</span> registros detectados
+      </div>
+      <div class="progress-wrap" id="salesProgress">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="salesBar"></div>
+        </div>
+        <div class="progress-text" id="salesProgressText">Enviando...</div>
+      </div>
+      <button class="btn primary" id="salesBtn" onclick="sendSales()" disabled>Enviar Sales</button>
+      <button class="btn reset" onclick="resetSales()">Reset</button>
+      <div class="status" id="salesStatus"></div>
+      <div id="salesPreview"></div>
+    </div>
+
+    <!-- VISITS -->
+    <div class="card">
+      <h3>👥 Visits Upload</h3>
+      <div class="drop" onclick="document.getElementById('visitFile').click()">
+        📂 Click o arrastra archivo Visits (.xlsx)
+      </div>
+      <input type="file" id="visitFile" accept=".xlsx,.xls">
+      <div class="counter" id="visitCounter">
+        <span id="visitCount">0</span> registros detectados
+      </div>
+      <div class="progress-wrap" id="visitProgress">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="visitBar"></div>
+        </div>
+        <div class="progress-text" id="visitProgressText">Enviando...</div>
+      </div>
+      <button class="btn primary" id="visitBtn" onclick="sendVisits()" disabled>Enviar Visits</button>
+      <button class="btn reset" onclick="resetVisits()">Reset</button>
+      <div class="status" id="visitStatus"></div>
+      <div id="visitPreview"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// POWER AUTOMATE — único punto de salida
+// No hay API keys ni URLs del API aquí
+// =============================================
+const PA_URL = "https://default1996b215fbd3428da6bfeb260f84a6.b2.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7e09de74354746c284be0709b45ea05f/triggers/manual/paths/invoke?api-version=1";
+
+let salesFileName = '';
+let visitFileName = '';
+let salesData     = [];
+let visitData     = [];
+
+// ===== Fix Excel Date =====
+function fixDate(v){
+  if(!v) return '';
+  if(typeof v === 'number'){
+    const d = XLSX.SSF.parse_date_code(v);
+    return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+  }
+  if(v instanceof Date) return v.toISOString().split('T')[0];
+  return String(v).trim();
+}
+
+// ===== Fix Time =====
+function fixTime(v){
+  if(!v) return '00:00';
+  if(typeof v === 'number'){
+    const totalMins = Math.round(v * 24 * 60);
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  return String(v).trim().slice(0,5);
+}
+
+// ===== Fix Origin =====
+function fixOrigin(v){
+  if(!v) return 'Showroom';
+  const s = String(v).trim().toLowerCase();
+  if(s.includes('digital'))  return 'Digital';
+  if(s.includes('showroom')) return 'Showroom';
+  return 'Showroom';
+}
+
+// ===== Parse sold =====
+function parseSold(v){
+  if(typeof v === 'boolean') return v;
+  if(typeof v === 'number')  return v === 1;
+  const s = String(v).trim().toLowerCase();
+  return s === 'true' || s === 'yes' || s === 'si' || s === 'sí' || s === '1';
+}
+
+// ===== Read Excel =====
+function readExcel(file, sheetName, callback){
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const wb   = XLSX.read(new Uint8Array(e.target.result), { type:'array', cellDates:false });
+    const ws   = wb.Sheets[sheetName] || wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { defval:'' });
+    callback(json);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ===== Group by dealer =====
+function groupByDealer(data){
+  const groups = {};
+  data.forEach(r => {
+    const dealer = String(r['Dealer'] || '').trim();
+    if(!dealer) return;
+    if(!groups[dealer]) groups[dealer] = [];
+    groups[dealer].push(r);
+  });
+  return groups;
+}
+
+// ===== UI helpers =====
+function showStatus(id, type, msg){
+  const el = document.getElementById(id);
+  el.className = `status ${type}`;
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+function setProgress(barId, textId, pct, msg){
+  document.getElementById(barId).style.width = pct + '%';
+  document.getElementById(textId).textContent = msg;
+}
+
+// ===== Send to Power Automate =====
+async function sendToPA(dealer, type, filename, records){
+  const resp = await fetch(PA_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dealer, type, filename, records })
+  });
+  return resp;
+}
+
+// =============================================
+// SALES
+// =============================================
+document.getElementById('salesFile').addEventListener('change', function(e){
+  salesFileName = e.target.files[0].name;
+  readExcel(e.target.files[0], 'Sales', function(data){
+    salesData = data;
+    document.getElementById('salesCount').textContent = data.length;
+    document.getElementById('salesCounter').style.display = 'block';
+    document.getElementById('salesBtn').disabled = false;
+    document.getElementById('salesStatus').style.display = 'none';
+    previewSales(data);
+  });
+});
+
+function previewSales(data){
+  if(!data.length) return;
+  const cols = ['Dealer','Nombre','Teléfono','Modelo','Fecha de venta','Valor','Vendido'];
+  let html = `<div class="preview-label">Vista previa — primeras 5 filas</div>
+  <div class="table-wrap"><table class="table"><tr>`;
+  cols.forEach(c => html += `<th>${c}</th>`);
+  html += '</tr>';
+  data.slice(0,5).forEach(r => {
+    html += '<tr>';
+    cols.forEach(c => {
+      let val = c.includes('venta') ? fixDate(r[c]) : (r[c] ?? '');
+      html += `<td>${val}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+  document.getElementById('salesPreview').innerHTML = html;
+}
+
+async function sendSales(){
+  if(!salesData.length) return;
+  const btn = document.getElementById('salesBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  document.getElementById('salesProgress').style.display = 'block';
+  document.getElementById('salesStatus').style.display = 'none';
+
+  const groups  = groupByDealer(salesData);
+  const dealers = Object.entries(groups);
+  let sent = 0, errors = 0;
+
+  for(let i = 0; i < dealers.length; i++){
+    const [dealer, records] = dealers[i];
+    const pct = Math.round((i / dealers.length) * 100);
+    setProgress('salesBar','salesProgressText', pct, `Enviando ${dealer} (${i+1}/${dealers.length})...`);
+
+    // Build records with correct field names for the API
+    const payload = records.map(r => {
+      const soldVal = parseSold(r['Vendido']);
+      const obj = {
+        name:          String(r['Nombre'] || '').trim(),
+        phone:         String(r['Teléfono'] || '').trim(),
+        email:         String(r['Email'] || '').trim(),
+        document:      String(r['Documento'] || '').trim(),
+        model:         String(r['Modelo'] || '').trim(),
+        saleDate:      fixDate(r['Fecha de venta']),
+        amount:        parseFloat(r['Valor']) || 0,
+        sold:          soldVal,
+        origin:        fixOrigin(r['Origen'] || ''),
+        salesmanName:  String(r['Nombre del vendedor'] || '').trim(),
+        salesmanEmail: String(r['Correo electrónico del vendedor'] || '').trim(),
+      };
+      if(!soldVal) obj.lossReason = String(r['Motivo de pérdida'] || 'Other').trim();
+      if(r['ID Externo']) obj.external_id = String(r['ID Externo']).trim();
+      return obj;
+    });
+
+    try{
+      const resp = await sendToPA(dealer, 'Sales', salesFileName, payload);
+      if(resp.ok){
+        sent += records.length;
+      } else {
+        console.error(`[${dealer}] PA error:`, resp.status);
+        errors += records.length;
+      }
+    } catch(e){
+      console.error(`[${dealer}] Error:`, e);
+      errors += records.length;
+    }
+  }
+
+  setProgress('salesBar','salesProgressText', 100, 'Completado');
+  btn.textContent = 'Enviar Sales';
+  btn.disabled = false;
+
+  if(errors === 0){
+    showStatus('salesStatus','ok', `✅ ${sent} registros enviados exitosamente`);
+  } else if(sent === 0){
+    showStatus('salesStatus','err', `❌ Error — ${errors} registros fallaron`);
+  } else {
+    showStatus('salesStatus','warn', `⚠️ ${sent} enviados · ${errors} fallaron`);
+  }
+}
+
+function resetSales(){
+  salesData = [];
+  salesFileName = '';
+  document.getElementById('salesPreview').innerHTML = '';
+  document.getElementById('salesFile').value = '';
+  document.getElementById('salesCounter').style.display = 'none';
+  document.getElementById('salesProgress').style.display = 'none';
+  document.getElementById('salesStatus').style.display = 'none';
+  document.getElementById('salesBar').style.width = '0%';
+  document.getElementById('salesBtn').disabled = true;
+  document.getElementById('salesBtn').textContent = 'Enviar Sales';
+}
+
+// =============================================
+// VISITS
+// =============================================
+document.getElementById('visitFile').addEventListener('change', function(e){
+  visitFileName = e.target.files[0].name;
+  readExcel(e.target.files[0], 'Visits', function(data){
+    visitData = data;
+    document.getElementById('visitCount').textContent = data.length;
+    document.getElementById('visitCounter').style.display = 'block';
+    document.getElementById('visitBtn').disabled = false;
+    document.getElementById('visitStatus').style.display = 'none';
+    previewVisits(data);
+  });
+});
+
+function previewVisits(data){
+  if(!data.length) return;
+  const cols = ['Dealer','Nombre','Teléfono','Fecha de la visita','Origen','Nombre del vendedor'];
+  let html = `<div class="preview-label">Vista previa — primeras 5 filas</div>
+  <div class="table-wrap"><table class="table"><tr>`;
+  cols.forEach(c => html += `<th>${c}</th>`);
+  html += '</tr>';
+  data.slice(0,5).forEach(r => {
+    html += '<tr>';
+    cols.forEach(c => {
+      let val = c.includes('visita') && !c.includes('Nombre') ? fixDate(r[c]) : (r[c] ?? '');
+      html += `<td>${val}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+  document.getElementById('visitPreview').innerHTML = html;
+}
+
+async function sendVisits(){
+  if(!visitData.length) return;
+  const btn = document.getElementById('visitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  document.getElementById('visitProgress').style.display = 'block';
+  document.getElementById('visitStatus').style.display = 'none';
+
+  const groups  = groupByDealer(visitData);
+  const dealers = Object.entries(groups);
+  let sent = 0, errors = 0;
+
+  for(let i = 0; i < dealers.length; i++){
+    const [dealer, records] = dealers[i];
+    const pct = Math.round((i / dealers.length) * 100);
+    setProgress('visitBar','visitProgressText', pct, `Enviando ${dealer} (${i+1}/${dealers.length})...`);
+
+    const payload = records.map(r => {
+      const models = ['Modelo probado 1','Modelo probado 2','Modelo probado 3']
+        .map(k => String(r[k] || '').trim())
+        .filter(Boolean);
+      const obj = {
+        name:          String(r['Nombre'] || '').trim(),
+        phone:         String(r['Teléfono'] || '').trim(),
+        email:         String(r['Email'] || '').trim(),
+        document:      String(r['Documento'] || '').trim(),
+        visitDate:     fixDate(r['Fecha de la visita']),
+        visitTime:     fixTime(r['Hora de la visita']),
+        origin:        fixOrigin(r['Origen'] || ''),
+        salesmanName:  String(r['Nombre del vendedor'] || '').trim(),
+        salesmanEmail: String(r['Email Vendedor'] || '').trim(),
+        testedModels:  models,
+      };
+      if(r['ID Externo']) obj.external_id = String(r['ID Externo']).trim();
+      return obj;
+    });
+
+    try{
+      const resp = await sendToPA(dealer, 'Visits', visitFileName, payload);
+      if(resp.ok){
+        sent += records.length;
+      } else {
+        console.error(`[${dealer}] PA error:`, resp.status);
+        errors += records.length;
+      }
+    } catch(e){
+      console.error(`[${dealer}] Error:`, e);
+      errors += records.length;
+    }
+  }
+
+  setProgress('visitBar','visitProgressText', 100, 'Completado');
+  btn.textContent = 'Enviar Visits';
+  btn.disabled = false;
+
+  if(errors === 0){
+    showStatus('visitStatus','ok', `✅ ${sent} registros enviados exitosamente`);
+  } else if(sent === 0){
+    showStatus('visitStatus','err', `❌ Error — ${errors} registros fallaron`);
+  } else {
+    showStatus('visitStatus','warn', `⚠️ ${sent} enviados · ${errors} fallaron`);
+  }
+}
+
+function resetVisits(){
+  visitData = [];
+  visitFileName = '';
+  document.getElementById('visitPreview').innerHTML = '';
+  document.getElementById('visitFile').value = '';
+  document.getElementById('visitCounter').style.display = 'none';
+  document.getElementById('visitProgress').style.display = 'none';
+  document.getElementById('visitStatus').style.display = 'none';
+  document.getElementById('visitBar').style.width = '0%';
+  document.getElementById('visitBtn').disabled = true;
+  document.getElementById('visitBtn').textContent = 'Enviar Visits';
+}
+</script>
+</body>
+</html>
