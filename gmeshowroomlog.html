@@ -315,7 +315,11 @@ const msalConfig = {
 };
 
 const loginRequest = {
-  scopes: ['openid', 'profile', 'User.Read', 'Sites.Read.All']
+  scopes: ['openid', 'profile', 'User.Read']
+};
+
+const graphRequest = {
+  scopes: ['https://graph.microsoft.com/Sites.Read.All', 'https://graph.microsoft.com/User.Read']
 };
 
 let msalInstance;
@@ -365,9 +369,19 @@ async function loginWithO365() {
 async function handleLoginSuccess(account, accessToken) {
   load('Verificando acceso...');
   try {
+    // Acquire Graph token separately
+    let graphToken = accessToken;
+    try {
+      const graphResp = await msalInstance.acquireTokenSilent({ ...graphRequest, account });
+      graphToken = graphResp.accessToken;
+    } catch(e) {
+      // Use original token as fallback
+      console.warn('Could not get Graph token silently:', e);
+    }
+
     // Fetch full profile from Graph
     const profileRes = await fetch('https://graph.microsoft.com/v1.0/me', {
-      headers: { 'Authorization': 'Bearer ' + accessToken }
+      headers: { 'Authorization': 'Bearer ' + graphToken }
     });
     const profile = await profileRes.json();
     const email = profile.userPrincipalName || account.username;
@@ -375,7 +389,7 @@ async function handleLoginSuccess(account, accessToken) {
     const initials = name.split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase();
 
     // Validate against Config_Users in SharePoint
-    const roleData = await checkUserAccess(email, accessToken);
+    const roleData = await checkUserAccess(email, graphToken);
     if (!roleData) {
       unload();
       showLoginError(`La cuenta ${email} no tiene acceso a esta plataforma. Contacta al administrador.`);
@@ -383,7 +397,7 @@ async function handleLoginSuccess(account, accessToken) {
       return;
     }
 
-    S.user = { name, email, initials, role: roleData.Role, dealer: roleData.Dealer, token: accessToken };
+    S.user = { name, email, initials, role: roleData.Role, dealer: roleData.Dealer, token: graphToken };
     S.role = roleData.Role;
     showApp();
   } catch(e) {
