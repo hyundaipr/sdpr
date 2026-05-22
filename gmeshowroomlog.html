@@ -315,15 +315,11 @@ const msalConfig = {
 };
 
 const loginRequest = {
-  scopes: ['openid', 'profile', 'User.Read']
+  scopes: ['openid', 'profile', 'User.Read', 'https://graph.microsoft.com/Sites.ReadWrite.All']
 };
 
 const graphRequest = {
-  scopes: ['https://graph.microsoft.com/Sites.Read.All', 'https://graph.microsoft.com/User.Read']
-};
-
-const flowRequest = {
-  scopes: ['https://service.flow.microsoft.com/Flows.Read.All']
+  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All', 'https://graph.microsoft.com/User.Read']
 };
 
 let msalInstance;
