@@ -324,7 +324,7 @@ const graphRequest = {
 
 let msalInstance;
 const SITE_URL = 'https://hyundaipr.sharepoint.com/sites/GPR';
-let FLOW_URL = 'https://default1996b215fbd3428da6bfeb260f84a6.b2.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3dde42c185dd469d968a1e080dec0b09/triggers/manual/paths/invoke?api-version=1';
+let FLOW_URL = 'https://default1996b215fbd3428da6bfeb260f84a6.b2.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3dde42c185dd469d968a1e080dec0b09/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=z9w2-sVsbIFouFBhIMGIStWGJ8gLAWBdt1uw4gsixpca';
 const S = { user: null, role: null, customerId: null, sel: {model:null,source:null,time:null,result:null} };
 
 // ── INIT ──
@@ -497,7 +497,7 @@ async function findCustomer() {
   load('Buscando cliente...');
   try {
     const siteId = await getSharePointSiteId(S.user.token);
-    const filter = encodeURIComponent(`fields/Phone_x0020_Number eq '${phone}'`);
+    const filter = encodeURIComponent(`fields/PhoneNumber eq '${phone}'`);
     const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Customers/items?$filter=${filter}&$expand=fields&$top=1`;
     const res = await fetch(url, { headers: { 'Authorization':'Bearer '+S.user.token } });
     const data = await res.json();
@@ -534,16 +534,8 @@ async function saveVisit() {
 
   load('Guardando visita...');
   document.getElementById('btnSave').disabled = true;
-
-  // Acquire Power Platform token
-  let flowToken = S.user.token;
-  try {
-    const accounts = msalInstance.getAllAccounts();
-    const flowResp = await msalInstance.acquireTokenSilent({ ...flowRequest, account: accounts[0] });
-    flowToken = flowResp.accessToken;
-  } catch(e) { console.warn('Could not get flow token:', e); }
-
-  const body = {
+ // NOTE: Calling Flow via signed HTTP URL. No extra bearer token is required here.
+const body = {
     VisitName: visitName, PhoneNumber: phone, CustomerName: name,
     Model: S.sel.model, SalesConsultant: consultant, LeadSource: S.sel.source,
     TestDrive: document.getElementById('swTD').checked,
