@@ -322,6 +322,10 @@ const graphRequest = {
   scopes: ['https://graph.microsoft.com/Sites.Read.All', 'https://graph.microsoft.com/User.Read']
 };
 
+const flowRequest = {
+  scopes: ['https://service.flow.microsoft.com/Flows.Read.All']
+};
+
 let msalInstance;
 const SITE_URL = 'https://hyundaipr.sharepoint.com/sites/GPR';
 let FLOW_URL = 'https://default1996b215fbd3428da6bfeb260f84a6.b2.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3dde42c185dd469d968a1e080dec0b09/triggers/manual/paths/invoke?api-version=1';
@@ -534,6 +538,15 @@ async function saveVisit() {
 
   load('Guardando visita...');
   document.getElementById('btnSave').disabled = true;
+
+  // Acquire Power Platform token
+  let flowToken = S.user.token;
+  try {
+    const accounts = msalInstance.getAllAccounts();
+    const flowResp = await msalInstance.acquireTokenSilent({ ...flowRequest, account: accounts[0] });
+    flowToken = flowResp.accessToken;
+  } catch(e) { console.warn('Could not get flow token:', e); }
+
   const body = {
     VisitName: visitName, PhoneNumber: phone, CustomerName: name,
     Model: S.sel.model, SalesConsultant: consultant, LeadSource: S.sel.source,
