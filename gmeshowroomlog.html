@@ -315,7 +315,7 @@ const msalConfig = {
 };
 
 const loginRequest = {
-  scopes: ['openid', 'profile', 'User.Read', 'https://hyundaipr.sharepoint.com/AllSites.Read']
+  scopes: ['openid', 'profile', 'User.Read', 'Sites.Read.All']
 };
 
 let msalInstance;
@@ -394,17 +394,31 @@ async function handleLoginSuccess(account, accessToken) {
 
 async function checkUserAccess(email, token) {
   try {
-    const filter = encodeURIComponent(`User eq '${email}'`);
-    const url = `${SITE_URL}/_api/web/lists/getbytitle('Config_Users')/items?$filter=${filter}&$top=1&$select=User,Role,Dealer`;
+    // Use Microsoft Graph to access SharePoint list (avoids CORS issues)
+    const siteId = await getSharePointSiteId(token);
+    if (!siteId) return null;
+    
+    const filter = encodeURIComponent(`fields/User eq '${email}'`);
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Config_Users/items?$filter=${filter}&$expand=fields($select=User,Role,Dealer)&$top=1`;
     const res = await fetch(url, {
-      headers: {
-        'Accept': 'application/json;odata=verbose',
-        'Authorization': 'Bearer ' + token
-      }
+      headers: { 'Authorization': 'Bearer ' + token }
     });
     const data = await res.json();
-    const items = data?.d?.results || [];
-    return items.length > 0 ? items[0] : null;
+    const items = data?.value || [];
+    if (items.length > 0) {
+      return { Role: items[0].fields?.Role, Dealer: items[0].fields?.Dealer };
+    }
+    return null;
+  } catch(e) { console.error('checkUserAccess error:', e); return null; }
+}
+
+async function getSharePointSiteId(token) {
+  try {
+    const res = await fetch('https://graph.microsoft.com/v1.0/sites/hyundaipr.sharepoint.com:/sites/GPR', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    return data?.id || null;
   } catch(e) { return null; }
 }
 
@@ -467,18 +481,16 @@ async function findCustomer() {
   if (!phone) { toast('Ingresa un número de teléfono','err'); return; }
   load('Buscando cliente...');
   try {
-    const filter = encodeURIComponent(`Phone_x0020_Number eq '${phone}'`);
-    const url = `${SITE_URL}/_api/web/lists/getbytitle('Customers')/items?$filter=${filter}&$top=1`;
-    const res = await fetch(url, {
-      headers: { 'Accept':'application/json;odata=verbose', 'Authorization':'Bearer '+S.user.token },
-      credentials: 'include'
-    });
+    const siteId = await getSharePointSiteId(S.user.token);
+    const filter = encodeURIComponent(`fields/Phone_x0020_Number eq '${phone}'`);
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Customers/items?$filter=${filter}&$expand=fields&$top=1`;
+    const res = await fetch(url, { headers: { 'Authorization':'Bearer '+S.user.token } });
     const data = await res.json();
-    const items = data?.d?.results || [];
+    const items = data?.value || [];
     const badge = document.getElementById('custBadge');
     if (items.length > 0) {
-      S.customerId = items[0].ID;
-      const name = items[0].Title || '';
+      S.customerId = items[0].id;
+      const name = items[0].fields?.Title || '';
       badge.className = 'cust-badge found';
       badge.textContent = `Cliente encontrado${name?': '+name:''} · ID ${S.customerId}`;
       if (name) document.getElementById('fName').value = name;
@@ -542,11 +554,24 @@ async function loadTodayVisits() {
   const stack = document.getElementById('visitStack');
   stack.innerHTML='<div class="empty-state"><div class="empty-line"></div><div class="empty-text">Cargando visitas</div></div>';
   try {
+    const siteId = await getSharePointSiteId(S.user.token);
     const today=new Date(); today.setHours(0,0,0,0);
-    const url=`${SITE_URL}/_api/web/lists/getbytitle('Showroom_Visits')/items?$filter=Created ge datetime'${today.toISOString()}'&$orderby=Created desc&$top=100`;
-    const res=await fetch(url,{headers:{'Accept':'application/json;odata=verbose','Authorization':'Bearer '+S.user.token},credentials:'include'});
+    const filter = encodeURIComponent(`fields/Created ge '${today.toISOString()}'`);
+    const url=`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Showroom_Visits/items?$expand=fields&$top=100&$orderby=createdDateTime desc`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+S.user.token}});
     const data=await res.json();
-    const items=data?.d?.results||[];
+    const rawItems=data?.value||[];
+    const items=rawItems.filter(i=>new Date(i.createdDateTime)>=today).map(i=>({
+      VisitName:i.fields?.Title,
+      Model:i.fields?.Model,
+      Results:i.fields?.Results,
+      LeadSource:i.fields?.LeadSource,
+      TestDrive:i.fields?.TestDrive,
+      AppointmentSet:i.fields?.AppointmentSet,
+      Sold:i.fields?.Sold,
+      SalesConsultant:i.fields?.SalesConsultant,
+      Created:i.createdDateTime
+    }));
     document.getElementById('sV').textContent=items.length;
     document.getElementById('sD').textContent=items.filter(i=>i.TestDrive).length;
     document.getElementById('sA').textContent=items.filter(i=>i.AppointmentSet).length;
@@ -557,7 +582,7 @@ async function loadTodayVisits() {
     }
     const rc=r=>({'Interested':'vtag-interested','Lead':'vtag-lead','Curious':'vtag-curious'}[r]||'vtag-source');
     stack.innerHTML=items.map(i=>{
-      const t=new Date(i.Created).toLocaleTimeString('es-PR',{hour:'2-digit',minute:'2-digit'});
+      const t=new Date(i.Created||i.createdDateTime).toLocaleTimeString('es-PR',{hour:'2-digit',minute:'2-digit'});
       return `<div class="visit-card">
         <div class="vc-top"><div class="vc-name">${i.VisitName||'—'}</div><div class="vc-time">${t}</div></div>
         <div class="vc-tags">
