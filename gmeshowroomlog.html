@@ -614,11 +614,11 @@ async function findCustomer() {
 
   try {
     const siteId = await getSharePointSiteId(S.user.token);
-    const filter = encodeURIComponent(`fields/PhoneNumber eq '${phone}'`);
-    const url    = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Customers/items?$filter=${filter}&$expand=fields&$top=1`;
+    const url    = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Customers/items?$expand=fields&$top=500`;
     const res    = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
     const data   = await res.json();
-    const items  = data?.value || [];
+    const all    = data?.value || [];
+    const items  = all.filter(i => (i.fields?.PhoneNumber || '').trim() === phone.trim());
 
     S.customerSearchDone = true;
     document.getElementById('searchHint').classList.remove('show');
