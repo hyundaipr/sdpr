@@ -355,8 +355,8 @@ select.finput option{background:#111;color:var(--white)}
     <div class="fgrp">
       <label class="flabel">Visit result</label>
       <div class="pill-group" id="pgResult">
-        <button class="pill" onclick="selPill(this,'result')">Curioso</button>
-        <button class="pill" onclick="selPill(this,'result')">Interesado</button>
+        <button class="pill" onclick="selPill(this,'result')">Curious</button>
+        <button class="pill" onclick="selPill(this,'result')">Interested</button>
         <button class="pill" onclick="selPill(this,'result')">Lead</button>
       </div>
     </div>
@@ -451,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     const resp = await msalInstance.handleRedirectPromise();
     if (resp && resp.account) { await handleLoginSuccess(resp.account, resp.accessToken); return; }
-  } catch(e) { showLoginError('Authentication error. Please try again.'); }
+  } catch(e) { console.warn('handleRedirectPromise:', e); }
   const accounts = msalInstance.getAllAccounts();
   if (accounts.length > 0) {
     try {
@@ -682,7 +682,7 @@ function confirmNewCustomer() {
   const badge = document.getElementById('custBadge');
   document.getElementById('badgeName').textContent = name;
   document.getElementById('badgeMeta').textContent = 'Will be registered on save · New';
-  document.getElementById('badgeActions').innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Change customer</button>`nge customer</button>`;
+  document.getElementById('badgeActions').innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Change customer</button>`;
   badge.className = 'cust-badge found'; // reuse found style as "confirmed"
   document.getElementById('fName').disabled = true;
   if (!document.getElementById('fVisitName').value) {
