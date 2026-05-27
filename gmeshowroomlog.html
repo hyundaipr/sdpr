@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -199,6 +200,56 @@ select.finput option{background:#111;color:var(--white)}
 .um-item:last-child{border-bottom:none}
 .um-item:hover{background:var(--gold-bg);color:var(--gold)}
 
+
+/* ── LIGHT MODE ── */
+body.light{
+  --bg:#f5f3ef;--bg2:#ffffff;--bg3:#ede9e3;--bg4:#e0dbd3;
+  --white:#1a1a1a;--white2:#2c2c2c;--white3:#555;
+  --border:rgba(184,151,90,0.25);--border2:rgba(0,0,0,0.08);
+  --gold-bg:rgba(184,151,90,0.1);
+}
+body.light .finput{background:#fff;border-color:rgba(0,0,0,0.1);border-bottom-color:rgba(184,151,90,0.5);color:#1a1a1a}
+body.light .finput::placeholder{color:rgba(0,0,0,0.35)}
+body.light .pill{background:#fff;border-color:rgba(0,0,0,0.1);color:#555}
+body.light .sw-item{background:#fff;border-color:rgba(0,0,0,0.1)}
+body.light .visit-card{background:#fff}
+body.light .stat-cell{background:#fff}
+body.light select.finput option{background:#fff;color:#1a1a1a}
+body.light .search-hist{background:#fff;color:#1a1a1a}
+body.light .login-card{background:#fff}
+body.light #loginScreen{background:#f5f3ef}
+body.light .user-menu{background:#fff}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gold);font-size:16px;transition:color 0.2s}
+.theme-toggle:hover{color:var(--gold2)}
+
+/* ── ADMIN TAB ── */
+.admin-controls{display:flex;flex-direction:column;gap:14px;margin-bottom:28px}
+.admin-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.admin-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px}
+.btn-export{padding:13px 20px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:var(--ff-sans);font-size:9px;font-weight:400;letter-spacing:0.25em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all 0.25s;display:flex;align-items:center;gap:8px}
+.btn-export:hover{background:var(--gold);color:#000}
+.btn-export svg{width:13px;height:13px;flex-shrink:0}
+
+/* Admin table */
+.admin-table-wrap{overflow-x:auto;border:1px solid var(--border2);margin-top:4px}
+.admin-table{width:100%;border-collapse:collapse;font-size:11px;min-width:900px}
+.admin-table thead tr{background:var(--bg3);border-bottom:1px solid var(--border)}
+.admin-table th{padding:11px 14px;text-align:left;font-size:8px;font-weight:400;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);white-space:nowrap;border-right:1px solid var(--border2)}
+.admin-table th:last-child{border-right:none}
+.admin-table tbody tr{border-bottom:1px solid var(--border2);transition:background 0.1s}
+.admin-table tbody tr:hover{background:var(--gold-bg)}
+.admin-table td{padding:10px 14px;color:var(--white2);white-space:nowrap;border-right:1px solid var(--border2);font-weight:300}
+.admin-table td:last-child{border-right:none}
+.admin-table .td-check{text-align:center}
+.check-yes{color:var(--gold);font-size:14px}
+.check-no{color:rgba(255,255,255,0.15);font-size:14px}
+body.light .check-no{color:rgba(0,0,0,0.15)}
+.admin-table .td-tag{padding:2px 8px;font-size:9px;letter-spacing:0.05em}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border2);overflow:hidden;margin-bottom:20px}
+.admin-empty{text-align:center;padding:50px 20px;color:var(--white3);font-size:10px;letter-spacing:0.2em;text-transform:uppercase}
+
 /* ── LOADER ── */
 .loader{display:none;position:fixed;inset:0;background:rgba(8,8,8,0.88);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:20px}
 .loader.show{display:flex}
@@ -254,6 +305,7 @@ select.finput option{background:#111;color:var(--white)}
     </div>
     <button class="um-item" onclick="switchTab('register')">Register Visit</button>
     <button class="um-item" onclick="switchTab('history')">Today's History</button>
+    <button class="um-item" id="umAdmin" onclick="switchTab('admin')" style="display:none">Admin Panel</button>
     <button class="um-item" onclick="logout()">Sign Out</button>
   </div>
 
@@ -264,13 +316,15 @@ select.finput option{background:#111;color:var(--white)}
     </div>
     <div class="hdr-right">
       <div class="hdr-user-name" id="hdrUserName"></div>
+      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">☀</div>
       <div class="hdr-avatar" id="hdrAvatar" onclick="toggleUserMenu()">?</div>
     </div>
   </header>
 
-  <nav class="app-nav">
+  <nav class="app-nav" id="appNav">
     <button class="nav-tab active" id="tabRegister" onclick="switchTab('register')">Register</button>
     <button class="nav-tab" id="tabHistory" onclick="switchTab('history')">History</button>
+    <button class="nav-tab" id="tabAdmin" onclick="switchTab('admin')" style="display:none">Admin</button>
   </nav>
 
   <!-- ── REGISTRO ── -->
@@ -414,6 +468,60 @@ select.finput option{background:#111;color:var(--white)}
       <div class="empty-state"><div class="empty-line"></div><div class="empty-text">Loading visits</div></div>
     </div>
   </div>
+
+  <!-- ── ADMIN ── -->
+  <div class="page" id="pageAdmin">
+    <div class="sec-label">Admin · Visit Records</div>
+
+    <div class="admin-controls">
+      <div class="admin-row">
+        <div class="admin-field">
+          <label class="flabel">From</label>
+          <input class="finput" type="date" id="adminDateFrom">
+        </div>
+        <div class="admin-field">
+          <label class="flabel">To</label>
+          <input class="finput" type="date" id="adminDateTo">
+        </div>
+        <button class="btn-export" onclick="exportToExcel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Export to Excel
+        </button>
+        <button class="btn-action" onclick="loadAdminVisits()">Apply</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="adminStats">
+      <div class="stat-cell"><div class="stat-num" id="aV">0</div><div class="stat-lbl">Visits</div></div>
+      <div class="stat-cell"><div class="stat-num" id="aD">0</div><div class="stat-lbl">Test Drive</div></div>
+      <div class="stat-cell"><div class="stat-num" id="aA">0</div><div class="stat-lbl">Appointments</div></div>
+      <div class="stat-cell"><div class="stat-num" id="aS">0</div><div class="stat-lbl">Sold</div></div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="adminTable">
+        <thead>
+          <tr>
+            <th>Visit Name</th>
+            <th>Customer</th>
+            <th>Model</th>
+            <th>Consultant</th>
+            <th>Lead Source</th>
+            <th>Result</th>
+            <th>Test Drive</th>
+            <th>Appointment</th>
+            <th>Sold</th>
+            <th>Time</th>
+            <th>Visit Date</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody">
+          <tr><td colspan="11" class="admin-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -541,17 +649,33 @@ function showApp() {
   document.getElementById('umEmail').textContent     = u.email;
   document.getElementById('umRole').textContent      = u.role || 'Consultant';
   loadTodayVisits();
+  // Show admin tab only for Admin role
+  if (u.role === 'Admin') {
+    document.getElementById('tabAdmin').style.display = '';
+    const umAdmin = document.getElementById('umAdmin'); if(umAdmin) umAdmin.style.display='';
+    document.getElementById('appNav').style.gridTemplateColumns = '1fr 1fr 1fr';
+  }
+  // Set default admin date range to current month
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const lastDay = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('adminDateFrom').value = `${y}-${m}-01`;
+  document.getElementById('adminDateTo').value   = `${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+  initTheme();
 }
 
 // ── TABS ──
 function switchTab(t) {
   hideUserMenu();
-  ['register','history'].forEach(x => {
+  ['register','history','admin'].forEach(x => {
     const cap = x.charAt(0).toUpperCase() + x.slice(1);
-    document.getElementById('tab'+cap).classList.toggle('active', x===t);
-    document.getElementById('page'+cap).classList.toggle('active', x===t);
+    const tabEl  = document.getElementById('tab'+cap);
+    const pageEl = document.getElementById('page'+cap);
+    if (tabEl)  tabEl.classList.toggle('active', x===t);
+    if (pageEl) pageEl.classList.toggle('active', x===t);
   });
   if (t === 'history') loadTodayVisits();
+  if (t === 'admin') loadAdminVisits();
 }
 
 // ── USER MENU ──
@@ -779,6 +903,19 @@ function setFilter(f) {
   const labels = { today:"Today's visits", week:"This week's visits", month:"This month's visits" };
   document.getElementById('histLabel').textContent = labels[f] || 'Visits';
   loadTodayVisits();
+  // Show admin tab only for Admin role
+  if (u.role === 'Admin') {
+    document.getElementById('tabAdmin').style.display = '';
+    const umAdmin = document.getElementById('umAdmin'); if(umAdmin) umAdmin.style.display='';
+    document.getElementById('appNav').style.gridTemplateColumns = '1fr 1fr 1fr';
+  }
+  // Set default admin date range to current month
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const lastDay = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('adminDateFrom').value = `${y}-${m}-01`;
+  document.getElementById('adminDateTo').value   = `${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+  initTheme();
 }
 
 let _searchTimer;
@@ -867,6 +1004,111 @@ async function loadTodayVisits() {
   } catch(e) {
     stack.innerHTML = '<div class="empty-state"><div class="empty-line"></div><div class="empty-text">Error loading visits</div></div>';
   }
+}
+
+
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeToggle').textContent = isLight ? '☾' : '☀';
+  try { localStorage.setItem('gme_theme', isLight ? 'light' : 'dark'); } catch(e){}
+}
+function initTheme() {
+  let pref = 'dark';
+  try { pref = localStorage.getItem('gme_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); } catch(e){}
+  if (pref === 'light') { document.body.classList.add('light'); document.getElementById('themeToggle').textContent = '☾'; }
+}
+
+// ── ADMIN: LOAD VISITS ──
+let _adminData = [];
+async function loadAdminVisits() {
+  const tbody = document.getElementById('adminTableBody');
+  tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">Loading...</td></tr>';
+  try {
+    const siteId = await getSharePointSiteId(S.user.token);
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Showroom_Visits/items?$expand=fields&$top=500`;
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
+    const data = await res.json();
+    let items = (data?.value || []).map(i => ({
+      VisitName:       i.fields?.Title || '',
+      CustomerID:      i.fields?.CustomerID || '',
+      Model:           i.fields?.Model || '',
+      SalesConsultant: i.fields?.SalesConsultant || '',
+      LeadSource:      i.fields?.LeadSource || '',
+      Results:         i.fields?.Results || '',
+      TestDrive:       i.fields?.TestDrive || false,
+      AppointmentSet:  i.fields?.AppointmentSet || false,
+      Sold:            i.fields?.Sold || false,
+      Time:            i.fields?.Time || '',
+      VisitDate:       i.fields?.VisitDate || i.createdDateTime?.split('T')[0] || ''
+    }));
+
+    // Apply date filter
+    const from = document.getElementById('adminDateFrom').value;
+    const to   = document.getElementById('adminDateTo').value;
+    if (from) items = items.filter(i => i.VisitDate >= from);
+    if (to)   items = items.filter(i => i.VisitDate <= to);
+
+    // Sort by date desc
+    items.sort((a,b) => b.VisitDate.localeCompare(a.VisitDate));
+    _adminData = items;
+
+    // Update stats
+    document.getElementById('aV').textContent = items.length;
+    document.getElementById('aD').textContent = items.filter(i => i.TestDrive).length;
+    document.getElementById('aA').textContent = items.filter(i => i.AppointmentSet).length;
+    document.getElementById('aS').textContent = items.filter(i => i.Sold).length;
+
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">No visits found for this period</td></tr>';
+      return;
+    }
+
+    const rc = r => ({'Interested':'vtag-interested','Lead':'vtag-lead','Curious':'vtag-curious'}[r] || 'vtag-source');
+    const chk = v => v ? '<span class="check-yes">✓</span>' : '<span class="check-no">—</span>';
+    tbody.innerHTML = items.map(i => `<tr>
+      <td>${i.VisitName || '—'}</td>
+      <td>${i.CustomerID || '—'}</td>
+      <td>${i.Model ? `<span class="vtag vtag-model td-tag">${i.Model}</span>` : '—'}</td>
+      <td>${i.SalesConsultant || '—'}</td>
+      <td>${i.LeadSource || '—'}</td>
+      <td>${i.Results ? `<span class="vtag ${rc(i.Results)} td-tag">${i.Results}</span>` : '—'}</td>
+      <td class="td-check">${chk(i.TestDrive)}</td>
+      <td class="td-check">${chk(i.AppointmentSet)}</td>
+      <td class="td-check">${chk(i.Sold)}</td>
+      <td>${i.Time || '—'}</td>
+      <td>${i.VisitDate || '—'}</td>
+    </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">Error loading visits</td></tr>';
+  }
+}
+
+// ── EXPORT TO EXCEL ──
+function exportToExcel() {
+  if (!_adminData.length) { toast('No data to export', 'err'); return; }
+  const from = document.getElementById('adminDateFrom').value || 'all';
+  const to   = document.getElementById('adminDateTo').value   || 'all';
+  const rows = _adminData.map(i => ({
+    'Visit Name':      i.VisitName,
+    'Customer':        i.CustomerID,
+    'Model':           i.Model,
+    'Consultant':      i.SalesConsultant,
+    'Lead Source':     i.LeadSource,
+    'Result':          i.Results,
+    'Test Drive':      i.TestDrive ? 'Yes' : 'No',
+    'Appointment Set': i.AppointmentSet ? 'Yes' : 'No',
+    'Sold':            i.Sold ? 'Yes' : 'No',
+    'Time':            i.Time,
+    'Visit Date':      i.VisitDate
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Visits');
+  // Style header row width
+  ws['!cols'] = [20,20,10,14,14,12,11,16,8,10,12].map(w => ({wch:w}));
+  XLSX.writeFile(wb, `Genesis_Visits_${from}_${to}.xlsx`);
+  toast('Excel exported', 'ok');
 }
 
 // ── DATES ──
