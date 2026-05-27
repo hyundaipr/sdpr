@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080808">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Genesis">
+<title>Genesis · Showroom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;
+  --white:#ffffff;--white2:#eaeaea;--white3:#cfcfcf;
+  --gold:#b8975a;--gold2:#d4b278;--gold3:#8a6f3e;
+  --gold-bg:rgba(184,151,90,0.08);--border:rgba(184,151,90,0.15);
+  --border2:rgba(240,237,232,0.08);
+  --green:#27ae60;--green-bg:rgba(39,174,96,0.08);
+  --ff-serif:'EB Garamond',Georgia,serif;
+  --ff-sans:'Montserrat',sans-serif;
+}
+html,body{height:100%;height:100dvh;background:var(--bg);color:var(--white);font-family:var(--ff-sans);font-size:14px;overflow-x:hidden}
+body{overscroll-behavior-y:none;}
+
+@supports(padding:max(0px)){
+  .page{padding-bottom:calc(100px + env(safe-area-inset-bottom));}
+  .toast{bottom:calc(28px + env(safe-area-inset-bottom));}
+  .user-menu{top:calc(60px + env(safe-area-inset-top));}
+}
+
+/* ── SCREENS ── */
+.screen{display:none;position:fixed;inset:0;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg)}
+.screen.active{display:block}
+
+/* ── LOGIN ── */
+#loginScreen{background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:40px 32px}
+#loginScreen.active{display:flex}
+.login-bg{position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(184,151,90,0.06) 0%,transparent 60%),radial-gradient(ellipse 80% 60% at 50% 100%,rgba(184,151,90,0.03) 0%,transparent 60%);pointer-events:none}
+.login-ring{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;border-radius:50%;border:1px solid rgba(184,151,90,0.04);pointer-events:none}
+.login-ring::before{content:'';position:absolute;inset:20px;border-radius:50%;border:1px solid rgba(184,151,90,0.06)}
+.login-ring::after{content:'';position:absolute;inset:40px;border-radius:50%;border:1px solid rgba(184,151,90,0.04)}
+.login-logo{position:relative;z-index:1;text-align:center;margin-bottom:56px}
+.login-brand{font-family:var(--ff-serif);font-size:26px;font-weight:400;letter-spacing:0.35em;color:var(--white);text-transform:uppercase;line-height:1;margin-bottom:8px}
+.login-divider{width:36px;height:1px;background:var(--border);margin:16px auto}
+.login-tagline{font-size:9px;font-weight:300;letter-spacing:0.45em;color:var(--gold);text-transform:uppercase}
+.login-card{position:relative;z-index:1;width:100%;max-width:340px;background:var(--bg2);border:1px solid var(--border2);padding:36px 28px}
+.login-title{font-family:var(--ff-serif);font-size:20px;font-weight:400;letter-spacing:0.05em;color:var(--white);margin-bottom:6px;text-align:center}
+.login-subtitle{font-size:10px;font-weight:300;letter-spacing:0.2em;color:var(--white3);text-align:center;text-transform:uppercase;margin-bottom:28px}
+.ms-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:15px 20px;background:transparent;border:1px solid var(--border);color:var(--white2);font-family:var(--ff-sans);font-size:11px;font-weight:400;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-bottom:14px}
+.ms-btn:hover{background:var(--gold-bg);border-color:var(--gold);color:var(--white)}
+.ms-btn:disabled{opacity:0.5;cursor:not-allowed}
+.ms-icon{width:18px;height:18px;flex-shrink:0}
+.login-note{font-size:9px;font-weight:300;letter-spacing:0.08em;color:var(--white3);text-align:center;line-height:1.9}
+.login-error{display:none;margin-top:16px;padding:10px 14px;background:rgba(192,57,43,0.08);border-left:2px solid #c0392b;color:#e07468;font-size:10px;font-weight:300;letter-spacing:0.05em;line-height:1.5}
+.login-error.show{display:block}
+
+/* ── APP HEADER ── */
+#appScreen{padding-bottom:0}
+#appScreen.active{display:block}
+.app-header{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border2);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.hdr-left{display:flex;flex-direction:column;gap:1px}
+.hdr-brand{font-family:var(--ff-serif);font-size:13px;font-weight:400;letter-spacing:0.3em;color:var(--white);text-transform:uppercase;line-height:1}
+.hdr-sub{font-size:7px;font-weight:300;letter-spacing:0.4em;color:var(--gold);text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.hdr-user-name{font-size:11px;font-weight:300;letter-spacing:0.05em;color:var(--white3)}
+.hdr-avatar{width:30px;height:30px;border-radius:50%;background:var(--gold3);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--white);cursor:pointer}
+.app-nav{position:sticky;top:58px;z-index:49;background:var(--bg);border-bottom:1px solid var(--border2);display:grid;grid-template-columns:1fr 1fr}
+.nav-tab{padding:15px 13px 11px;text-align:center;font-size:9px;font-weight:400;letter-spacing:0.35em;text-transform:uppercase;color:var(--white3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all 0.25s;font-family:var(--ff-sans);line-height:1.2}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── PAGE / FORM ── */
+.page{display:none;padding:28px 20px 100px}
+.page.active{display:block}
+.sec-label{font-size:8px;font-weight:400;letter-spacing:0.5em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sec-label::before{content:'';width:20px;height:1px;background:var(--gold);flex-shrink:0}
+.fgrp{margin-bottom:22px}
+.flabel{display:block;font-size:8px;font-weight:400;letter-spacing:0.3em;text-transform:uppercase;color:var(--white2);margin-bottom:8px}
+.finput{width:100%;background:#111;border:1px solid rgba(255,255,255,0.10);border-bottom:1px solid rgba(184,151,90,0.45);color:var(--white);padding:13px 14px;font-family:var(--ff-sans);font-size:13px;font-weight:300;outline:none;transition:all 0.2s;-webkit-appearance:none}
+.finput:focus{border-color:var(--gold);background:var(--bg3)}
+.finput::placeholder{color:rgba(255,255,255,0.35)}
+.finput:disabled{opacity:0.45;cursor:not-allowed}
+select.finput{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23b8975a' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;cursor:pointer}
+select.finput option{background:#111;color:var(--white)}
+
+/* ── CUSTOMER SEARCH ── */
+.search-row{display:flex;gap:8px}
+.search-row .finput{flex:1}
+.btn-action{padding:13px 16px;background:transparent;border:1px solid var(--border);color:var(--gold);font-family:var(--ff-sans);font-size:9px;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0}
+.btn-action:hover{background:var(--gold-bg);border-color:var(--gold2)}
+.btn-action:disabled{opacity:0.4;cursor:not-allowed}
+
+/* Customer result badge */
+.cust-badge{display:none;margin-top:10px;padding:12px 14px;font-size:10px;font-weight:300;letter-spacing:0.05em;line-height:1.5;border-radius:0}
+.cust-badge.found{display:block;background:rgba(184,151,90,0.07);border-left:2px solid var(--gold);color:var(--gold2)}
+.cust-badge.new{display:block;background:rgba(240,237,232,0.03);border-left:2px solid rgba(255,255,255,0.25);color:var(--white2)}
+.cust-badge.new .badge-actions{margin-top:10px;display:flex;gap:8px}
+.cust-badge.found .badge-actions{margin-top:10px;display:flex;gap:8px}
+.badge-name{font-size:13px;font-family:var(--ff-serif);color:var(--white);margin-bottom:2px}
+.badge-meta{font-size:9px;letter-spacing:0.08em;color:var(--white3)}
+.btn-badge{padding:8px 14px;font-family:var(--ff-sans);font-size:9px;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid}
+.btn-badge.primary{background:transparent;border-color:var(--gold);color:var(--gold)}
+.btn-badge.primary:hover{background:var(--gold-bg)}
+.btn-badge.secondary{background:transparent;border-color:rgba(255,255,255,0.15);color:var(--white3)}
+.btn-badge.secondary:hover{border-color:rgba(255,255,255,0.3);color:var(--white)}
+
+/* Search required hint */
+.search-hint{display:none;margin-top:6px;font-size:9px;letter-spacing:0.1em;color:rgba(192,57,43,0.9);padding:6px 10px;border-left:1px solid rgba(192,57,43,0.4)}
+.search-hint.show{display:block}
+
+/* ── PILLS ── */
+.pill-group{display:flex;flex-wrap:wrap;gap:6px}
+.pill{padding:9px 16px;background:#111;border:1px solid rgba(255,255,255,0.10);color:var(--white3);font-family:var(--ff-sans);font-size:11px;font-weight:300;letter-spacing:0.05em;cursor:pointer;transition:all 0.15s;flex:1;text-align:center;min-width:70px}
+.pill:hover{border-color:var(--gold3);color:var(--white2)}
+.pill.active{background:rgba(184,151,90,0.85);border-color:var(--gold);color:#000}
+
+/* Selected vehicles display */
+.selected-vehicles{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:0}
+.selected-vehicles:empty{display:none}
+
+/* ── SWITCHES ── */
+.switch-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sw-item{background:#111;border:1px solid rgba(255,255,255,0.10);padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;transition:border-color 0.2s;cursor:pointer}
+.sw-item.active-sw{border-color:var(--gold);background:rgba(184,151,90,0.05)}
+.sw-label{font-size:8px;font-weight:400;letter-spacing:0.25em;text-transform:uppercase;color:var(--white2);text-align:center}
+.sw{position:relative;width:44px;height:24px}
+.sw input{display:none}
+.sw-track{position:absolute;inset:0;background:var(--bg4);border:1px solid var(--border2);cursor:pointer;transition:all 0.2s}
+.sw-track::before{content:'';position:absolute;width:16px;height:16px;background:var(--white3);top:3px;left:3px;transition:all 0.2s}
+.sw input:checked~.sw-track{background:rgba(184,151,90,0.2);border-color:var(--gold)}
+.sw input:checked~.sw-track::before{transform:translateX(20px);background:var(--gold)}
+
+.fdivider{height:1px;background:var(--border2);margin:28px 0}
+
+/* ── SAVE BUTTON ── */
+.btn-save{width:100%;padding:18px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:var(--ff-serif);font-size:17px;font-weight:400;letter-spacing:0.3em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+.btn-save::before{content:'';position:absolute;inset:0;background:var(--gold);transform:translateX(-101%);transition:transform 0.3s ease}
+.btn-save span{position:relative;z-index:1}
+.btn-save:hover{color:var(--bg)}
+.btn-save:hover::before{transform:translateX(0)}
+.btn-save:disabled{opacity:0.35;cursor:not-allowed}
+
+/* ── HISTORY PAGE ── */
+.date-block{text-align:center;margin-bottom:24px}
+.date-weekday{font-family:var(--ff-serif);font-size:13px;font-weight:400;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold)}
+.date-full{font-size:10px;font-weight:300;letter-spacing:0.15em;color:var(--white3);margin-top:3px}
+
+/* History controls */
+.history-controls{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.filter-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.filter-btn{padding:10px 8px;background:#111;border:1px solid rgba(255,255,255,0.10);color:var(--white3);font-family:var(--ff-sans);font-size:9px;font-weight:400;letter-spacing:0.25em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;text-align:center}
+.filter-btn.active{background:rgba(184,151,90,0.85);border-color:var(--gold);color:#000}
+.filter-btn:hover:not(.active){border-color:var(--gold3);color:var(--white2)}
+.search-input-wrap{position:relative}
+.search-input-wrap::before{content:'';position:absolute;left:14px;top:50%;transform:translateY(-50%);width:12px;height:12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b8975a' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-size:contain;pointer-events:none}
+.search-hist{width:100%;background:#111;border:1px solid rgba(255,255,255,0.10);border-bottom:1px solid rgba(184,151,90,0.35);color:var(--white);padding:11px 14px 11px 36px;font-family:var(--ff-sans);font-size:12px;font-weight:300;outline:none;transition:all 0.2s}
+.search-hist:focus{border-color:var(--gold);background:var(--bg3)}
+.search-hist::placeholder{color:rgba(255,255,255,0.3)}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border2);overflow:hidden;margin-bottom:24px}
+.stat-cell{padding:16px 8px;text-align:center;border-right:1px solid var(--border2);background:var(--bg2)}
+.stat-cell:last-child{border-right:none}
+.stat-num{font-family:var(--ff-serif);font-size:28px;font-weight:400;color:var(--gold);line-height:1;margin-bottom:5px}
+.stat-lbl{font-size:7px;font-weight:400;letter-spacing:0.25em;text-transform:uppercase;color:var(--white3)}
+
+/* ── VISIT CARDS ── */
+.visits-stack{display:flex;flex-direction:column;gap:1px}
+.visit-card{background:#111;border-left:2px solid rgba(184,151,90,0.55);padding:16px 18px;position:relative;transition:border-left-color 0.15s}
+.visit-card:hover{border-left-color:var(--gold)}
+.vc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.vc-name{font-family:var(--ff-serif);font-size:17px;font-weight:400;color:var(--white)}
+.vc-time{font-size:9px;font-weight:300;letter-spacing:0.1em;color:var(--white3)}
+.vc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.vtag{padding:3px 9px;font-size:9px;font-weight:400;letter-spacing:0.1em}
+.vtag-model{background:rgba(184,151,90,0.1);color:var(--gold2);border:1px solid rgba(184,151,90,0.2)}
+.vtag-interested{background:rgba(39,174,96,0.08);color:#5dbb84;border:1px solid rgba(39,174,96,0.15)}
+.vtag-lead{background:rgba(184,151,90,0.12);color:var(--gold2);border:1px solid rgba(184,151,90,0.25)}
+.vtag-curious{background:rgba(100,140,220,0.08);color:#8aaee8;border:1px solid rgba(100,140,220,0.15)}
+.vtag-source{background:rgba(240,237,232,0.04);color:var(--white3);border:1px solid var(--border2)}
+.vc-meta{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.vc-meta-i{font-size:9px;font-weight:300;letter-spacing:0.05em;color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:3px}
+.vc-meta-i.on{color:var(--gold2)}
+.vc-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-line{width:40px;height:1px;background:var(--border2);margin:0 auto 20px}
+.empty-text{font-size:10px;font-weight:300;letter-spacing:0.2em;text-transform:uppercase;color:var(--white3)}
+
+/* ── USER MENU ── */
+.user-menu{display:none;position:fixed;top:60px;right:16px;background:var(--bg2);border:1px solid var(--border2);z-index:100;min-width:200px}
+.user-menu.show{display:block}
+.um-header{padding:14px 18px;border-bottom:1px solid var(--border2)}
+.um-name{font-family:var(--ff-serif);font-size:15px;color:var(--white);margin-bottom:2px}
+.um-email{font-size:9px;font-weight:300;letter-spacing:0.05em;color:var(--white3)}
+.um-role{display:inline-block;margin-top:6px;padding:2px 8px;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(184,151,90,0.3)}
+.um-item{padding:13px 18px;font-size:10px;font-weight:300;letter-spacing:0.1em;color:var(--white2);cursor:pointer;border-bottom:1px solid var(--border2);transition:background 0.15s;display:block;width:100%;text-align:left;background:none;border-left:none;border-right:none;border-top:none;font-family:var(--ff-sans)}
+.um-item:last-child{border-bottom:none}
+.um-item:hover{background:var(--gold-bg);color:var(--gold)}
+
+
+/* ── LIGHT MODE ── */
+body.light{
+  --bg:#f7f5f0;--bg2:#ffffff;--bg3:#eeeae3;--bg4:#e4dfd6;
+  --white:#1c1c1c;--white2:#333;--white3:#666;
+  --border:rgba(184,151,90,0.3);--border2:rgba(0,0,0,0.07);
+  --gold-bg:rgba(184,151,90,0.09);
+}
+body.light html,body.light body{background:var(--bg)}
+body.light .screen{background:var(--bg)}
+body.light .app-header{background:var(--bg);border-bottom-color:rgba(0,0,0,0.07)}
+body.light .app-nav{background:var(--bg);border-bottom-color:rgba(0,0,0,0.07)}
+body.light .finput{background:#fff;border-color:rgba(0,0,0,0.09);border-bottom-color:rgba(184,151,90,0.55);color:#1c1c1c;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+body.light .finput:focus{background:#fff;border-color:var(--gold)}
+body.light .finput::placeholder{color:rgba(0,0,0,0.3)}
+body.light .finput:disabled{background:#f0ede8;opacity:0.7}
+body.light .pill{background:#fff;border-color:rgba(0,0,0,0.09);color:#555;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+body.light .pill:hover{background:#faf8f4}
+body.light .sw-item{background:#fff;border-color:rgba(0,0,0,0.09);box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+body.light .visit-card{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+body.light .stat-cell{background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05)}
+body.light select.finput option{background:#fff;color:#1c1c1c}
+body.light .search-hist{background:#fff;color:#1c1c1c;border-bottom-color:rgba(184,151,90,0.4)}
+body.light .search-hist::placeholder{color:rgba(0,0,0,0.3)}
+body.light .login-card{background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+body.light #loginScreen{background:var(--bg)}
+body.light .user-menu{background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.12)}
+body.light .filter-btn{background:#fff;border-color:rgba(0,0,0,0.09);color:#666}
+body.light .admin-table thead tr{background:#eeeae3}
+body.light .admin-table tbody tr:hover{background:rgba(184,151,90,0.06)}
+body.light .vc-meta-i{color:rgba(0,0,0,0.25)}
+body.light .vc-meta-i.on{color:var(--gold)}
+body.light .fdivider{background:rgba(0,0,0,0.07)}
+body.light .sec-label{border-bottom-color:rgba(184,151,90,0.2)}
+body.light .cust-badge.new{background:rgba(0,0,0,0.03);border-left-color:rgba(0,0,0,0.2)}
+body.light .loader{background:rgba(247,245,240,0.9)}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gold);font-size:16px;transition:color 0.2s}
+.theme-toggle:hover{color:var(--gold2)}
+
+/* ── ADMIN TAB ── */
+.admin-controls{display:flex;flex-direction:column;gap:14px;margin-bottom:28px}
+.admin-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.admin-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px}
+.btn-export{padding:13px 20px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:var(--ff-sans);font-size:9px;font-weight:400;letter-spacing:0.25em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all 0.25s;display:flex;align-items:center;gap:8px}
+.btn-export:hover{background:var(--gold);color:#000}
+.btn-export svg{width:13px;height:13px;flex-shrink:0}
+
+/* Admin table */
+.admin-table-wrap{overflow-x:auto;border:1px solid var(--border2);margin-top:4px}
+.admin-table{width:100%;border-collapse:collapse;font-size:11px;min-width:900px}
+.admin-table thead tr{background:var(--bg3);border-bottom:1px solid var(--border)}
+.admin-table th{padding:11px 14px;text-align:left;font-size:8px;font-weight:400;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);white-space:nowrap;border-right:1px solid var(--border2)}
+.admin-table th:last-child{border-right:none}
+.admin-table tbody tr{border-bottom:1px solid var(--border2);transition:background 0.1s}
+.admin-table tbody tr:hover{background:var(--gold-bg)}
+.admin-table td{padding:10px 14px;color:var(--white2);white-space:nowrap;border-right:1px solid var(--border2);font-weight:300}
+.admin-table td:last-child{border-right:none}
+.admin-table .td-check{text-align:center}
+.check-yes{color:var(--gold);font-size:14px}
+.check-no{color:rgba(255,255,255,0.15);font-size:14px}
+body.light .check-no{color:rgba(0,0,0,0.15)}
+.admin-table .td-tag{padding:2px 8px;font-size:9px;letter-spacing:0.05em}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border2);overflow:hidden;margin-bottom:20px}
+.admin-empty{text-align:center;padding:50px 20px;color:var(--white3);font-size:10px;letter-spacing:0.2em;text-transform:uppercase}
+
+/* ── LOADER ── */
+.loader{display:none;position:fixed;inset:0;background:rgba(8,8,8,0.88);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+.loader.show{display:flex}
+.loader-ring{width:40px;height:40px;border:1px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{font-size:9px;font-weight:300;letter-spacing:0.4em;text-transform:uppercase;color:var(--white3)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);padding:12px 22px;font-size:11px;font-weight:300;letter-spacing:0.05em;z-index:300;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;border:1px solid var(--border2);background:var(--bg3);color:var(--white2)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(39,174,96,0.3);color:#5dbb84}
+.toast.err{border-color:rgba(192,57,43,0.3);color:#e07468}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader"><div class="loader-ring"></div><div class="loader-text" id="loaderText">Processing</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- ── LOGIN ── -->
+<div class="screen active" id="loginScreen">
+  <div class="login-bg"></div>
+  <div class="login-ring"></div>
+  <div class="login-logo">
+    <div class="login-brand">Genesis Puerto Rico</div>
+    <div class="login-divider"></div>
+    <div class="login-tagline">Showroom · Puerto Rico</div>
+  </div>
+  <div class="login-card">
+    <div class="login-title">Welcome</div>
+    <div class="login-subtitle">Corporate account access</div>
+    <button class="ms-btn" id="btnLogin" onclick="loginWithO365()">
+      <svg class="ms-icon" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      Sign in with corporate account
+    </button>
+    <div class="login-note">Authorized corporate accounts only</div>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div class="screen" id="appScreen">
+  <div class="user-menu" id="userMenu">
+    <div class="um-header">
+      <div class="um-name" id="umName"></div>
+      <div class="um-email" id="umEmail"></div>
+      <span class="um-role" id="umRole"></span>
+    </div>
+    <button class="um-item" onclick="switchTab('register')">Register Visit</button>
+    <button class="um-item" onclick="switchTab('history')">Today's History</button>
+    <button class="um-item" id="umAdmin" onclick="switchTab('admin')" style="display:none">Admin Panel</button>
+    <button class="um-item" onclick="logout()">Sign Out</button>
+  </div>
+
+  <header class="app-header">
+    <div class="hdr-left">
+      <div class="hdr-brand">Genesis Puerto Rico</div>
+      <div class="hdr-sub">Showroom · Puerto Rico</div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-user-name" id="hdrUserName"></div>
+      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">☀</div>
+      <div class="hdr-avatar" id="hdrAvatar" onclick="toggleUserMenu()">?</div>
+    </div>
+  </header>
+
+  <nav class="app-nav" id="appNav">
+    <button class="nav-tab active" id="tabRegister" onclick="switchTab('register')">Register</button>
+    <button class="nav-tab" id="tabHistory" onclick="switchTab('history')">History</button>
+    <button class="nav-tab" id="tabAdmin" onclick="switchTab('admin')" style="display:none">Admin</button>
+  </nav>
+
+  <!-- ── REGISTRO ── -->
+  <div class="page active" id="pageRegister">
+
+    <!-- STEP 1: CLIENTE -->
+    <div class="sec-label">Customer Information</div>
+
+    <!-- Phone search first -->
+    <div class="fgrp">
+      <label class="flabel">Phone</label>
+      <div class="search-row">
+        <input class="finput" id="fPhone" type="tel" placeholder="787-000-0000" oninput="onPhoneInput()" style="text-transform:uppercase">
+        <button class="btn-action" id="btnFind" onclick="findCustomer()">Search</button>
+      </div>
+      <div class="search-hint" id="searchHint">You must search for the customer before continuing</div>
+      <div class="cust-badge" id="custBadge">
+        <div class="badge-name" id="badgeName"></div>
+        <div class="badge-meta" id="badgeMeta"></div>
+        <div class="badge-actions" id="badgeActions"></div>
+      </div>
+    </div>
+
+    <!-- Name: auto-filled if found, editable if new -->
+    <div class="fgrp">
+      <label class="flabel">Full name</label>
+      <input class="finput" id="fName" type="text" placeholder="Customer name" disabled style="text-transform:uppercase">
+    </div>
+
+    <div class="fdivider"></div>
+
+    <!-- STEP 2: VISITA -->
+    <div class="sec-label">Visit Details</div>
+
+    <div class="fgrp">
+      <label class="flabel">Visit name</label>
+      <input class="finput" id="fVisitName" type="text" placeholder="E.g: JOHN DOE · WALK-IN" style="text-transform:uppercase">
+    </div>
+
+    <div class="fgrp-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="fgrp" style="margin-bottom:0">
+        <label class="flabel">Model of interest</label>
+        <select class="finput" id="fModel" onchange="onModelSelect(this)">
+          <option value="">Select model</option>
+        </select>
+        <div class="selected-vehicles" id="selectedVehicles"></div>
+      </div>
+      <div class="fgrp" style="margin-bottom:0">
+        <label class="flabel">Sales consultant</label>
+        <select class="finput" id="fConsultant">
+          <option value="">Select consultant</option>
+          <option>GXE1</option><option>GXE2</option><option>GXE3</option>
+          <option>GXE4</option><option>GXE5</option><option>GXE6</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fgrp">
+      <label class="flabel">Lead source</label>
+      <div class="pill-group" id="pgSource">
+        <button class="pill" onclick="selPill(this,'source')">Walk-In</button>
+        <button class="pill" onclick="selPill(this,'source')">Appointment</button>
+        <button class="pill" onclick="selPill(this,'source')">Referral</button>
+        <button class="pill" onclick="selPill(this,'source')">Call</button>
+        <button class="pill" onclick="selPill(this,'source')">Web</button>
+      </div>
+    </div>
+
+    <div class="fgrp">
+      <label class="flabel">Time in showroom</label>
+      <div class="pill-group" id="pgTime">
+        <button class="pill" onclick="selPill(this,'time')">&lt;5 min</button>
+        <button class="pill" onclick="selPill(this,'time')">5–15 min</button>
+        <button class="pill" onclick="selPill(this,'time')">15+ min</button>
+      </div>
+    </div>
+
+    <div class="fgrp">
+      <label class="flabel">Visit result</label>
+      <div class="pill-group" id="pgResult">
+        <button class="pill" onclick="selPill(this,'result')">Curious</button>
+        <button class="pill" onclick="selPill(this,'result')">Interested</button>
+        <button class="pill" onclick="selPill(this,'result')">Lead</button>
+      </div>
+    </div>
+
+    <div class="fgrp">
+      <label class="flabel">Activities</label>
+      <div class="switch-row">
+        <div class="sw-item" id="sw-td" onclick="toggleSwitch('swTD','sw-td')">
+          <div class="sw-label">Test Drive</div>
+          <label class="sw"><input type="checkbox" id="swTD"><div class="sw-track"></div></label>
+        </div>
+        <div class="sw-item" id="sw-ap" onclick="toggleSwitch('swAP','sw-ap')">
+          <div class="sw-label">Appointment</div>
+          <label class="sw"><input type="checkbox" id="swAP"><div class="sw-track"></div></label>
+        </div>
+        <div class="sw-item" id="sw-sl" onclick="toggleSwitch('swSL','sw-sl')">
+          <div class="sw-label">Sold</div>
+          <label class="sw"><input type="checkbox" id="swSL"><div class="sw-track"></div></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="fdivider"></div>
+    <button class="btn-save" onclick="saveVisit()" id="btnSave"><span>Save Visit</span></button>
+  </div>
+
+  <!-- ── HISTORIAL ── -->
+  <div class="page" id="pageHistory">
+    <div class="date-block">
+      <div class="date-weekday" id="hDay"></div>
+      <div class="date-full" id="hDate"></div>
+    </div>
+
+    <!-- Filter + Search controls -->
+    <div class="history-controls">
+      <div class="filter-row">
+        <button class="filter-btn active" id="fBtnToday" onclick="setFilter('today')">Today</button>
+        <button class="filter-btn" id="fBtnWeek" onclick="setFilter('week')">This Week</button>
+        <button class="filter-btn" id="fBtnMonth" onclick="setFilter('month')">This Month</button>
+      </div>
+      <div class="search-input-wrap">
+        <input class="search-hist" id="histSearch" type="text" placeholder="Search by name, model, consultant..." oninput="onHistSearch(this.value)">
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-cell"><div class="stat-num" id="sV">0</div><div class="stat-lbl">Visits</div></div>
+      <div class="stat-cell"><div class="stat-num" id="sD">0</div><div class="stat-lbl">Test Drive</div></div>
+      <div class="stat-cell"><div class="stat-num" id="sA">0</div><div class="stat-lbl">Appointments</div></div>
+      <div class="stat-cell"><div class="stat-num" id="sS">0</div><div class="stat-lbl">Sold</div></div>
+    </div>
+
+    <div class="sec-label" id="histLabel">Today's visits</div>
+    <div class="visits-stack" id="visitStack">
+      <div class="empty-state"><div class="empty-line"></div><div class="empty-text">Loading visits</div></div>
+    </div>
+  </div>
+
+  <!-- ── ADMIN ── -->
+  <div class="page" id="pageAdmin">
+    <div class="sec-label">Admin · Visit Records</div>
+
+    <div class="admin-controls">
+      <div class="admin-row">
+        <div class="admin-field">
+          <label class="flabel">From</label>
+          <input class="finput" type="date" id="adminDateFrom">
+        </div>
+        <div class="admin-field">
+          <label class="flabel">To</label>
+          <input class="finput" type="date" id="adminDateTo">
+        </div>
+        <button class="btn-export" onclick="exportToExcel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Export to Excel
+        </button>
+        <button class="btn-action" onclick="loadAdminVisits()">Apply</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="adminStats">
+      <div class="stat-cell"><div class="stat-num" id="aV">0</div><div class="stat-lbl">Visits</div></div>
+      <div class="stat-cell"><div class="stat-num" id="aD">0</div><div class="stat-lbl">Test Drive</div></div>
+      <div class="stat-cell"><div class="stat-num" id="aA">0</div><div class="stat-lbl">Appointments</div></div>
+      <div class="stat-cell"><div class="stat-num" id="aS">0</div><div class="stat-lbl">Sold</div></div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="adminTable">
+        <thead>
+          <tr>
+            <th>Visit Name</th>
+            <th>Customer</th>
+            <th>Model</th>
+            <th>Consultant</th>
+            <th>Lead Source</th>
+            <th>Result</th>
+            <th>Test Drive</th>
+            <th>Appointment</th>
+            <th>Sold</th>
+            <th>Time</th>
+            <th>Visit Date</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody">
+          <tr><td colspan="11" class="admin-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ──
+const msalConfig = {
+  auth: {
+    clientId: '2e6c0f48-cfe7-418b-a3b6-8b6a1d92f877',
+    authority: 'https://login.microsoftonline.com/1996b215-fbd3-428d-a6bf-eb260f84a6b2',
+    redirectUri: 'https://hyundaipr.github.io/sdpr/gmeshowroomlog.html'
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+const loginRequest  = { scopes: ['openid','profile','User.Read','https://graph.microsoft.com/Sites.ReadWrite.All'] };
+const graphRequest  = { scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read'] };
+
+let msalInstance;
+const SITE_URL = 'https://hyundaipr.sharepoint.com/sites/GPR';
+let FLOW_URL   = 'https://default1996b215fbd3428da6bfeb260f84a6.b2.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3dde42c185dd469d968a1e080dec0b09/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=z9w2-sVsbIFouFBhIMGIStWGJ8gLAWBdt1uw4gsixpc';
+
+// App state
+const S = {
+  user: null,
+  customerId: null,
+  customerSearchDone: false,   // ← NEW: forces search before saving
+  customerIsNew: false,        // ← NEW: true = new customer flow
+  sel: { models: [], source: null, time: null, result: null },
+  history: { filter: 'today', query: '' }
+};
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', async () => {
+  msalInstance = new msal.PublicClientApplication(msalConfig);
+  await msalInstance.initialize();
+  setDates();
+  try {
+    const resp = await msalInstance.handleRedirectPromise();
+    if (resp && resp.account) { await handleLoginSuccess(resp.account, resp.accessToken); return; }
+  } catch(e) { console.warn('handleRedirectPromise:', e); }
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    try {
+      const silent = await msalInstance.acquireTokenSilent({ ...loginRequest, account: accounts[0] });
+      await handleLoginSuccess(silent.account, silent.accessToken);
+    } catch(e) { /* session expired */ }
+  }
+});
+
+// ── AUTH ──
+async function loginWithO365() {
+  document.getElementById('btnLogin').disabled = true;
+  document.getElementById('loginError').classList.remove('show');
+  load('Connecting to Microsoft 365...');
+  try { await msalInstance.loginRedirect(loginRequest); }
+  catch(e) { unload(); document.getElementById('btnLogin').disabled = false; showLoginError('Could not connect. Check your connection.'); }
+}
+
+async function handleLoginSuccess(account, accessToken) {
+  load('Verifying access...');
+  try {
+    let graphToken = accessToken;
+    try {
+      const gr = await msalInstance.acquireTokenSilent({ ...graphRequest, account });
+      graphToken = gr.accessToken;
+    } catch(e) { /* use original */ }
+
+    const profileRes = await fetch('https://graph.microsoft.com/v1.0/me', { headers: { 'Authorization': 'Bearer ' + graphToken } });
+    const profile    = await profileRes.json();
+    const email      = profile.userPrincipalName || account.username;
+    const name       = profile.displayName || account.name || email;
+    const initials   = name.split(' ').slice(0,2).map(n => n[0]||'').join('').toUpperCase();
+
+    const roleData = await checkUserAccess(email, graphToken);
+    if (!roleData) {
+      unload();
+      showLoginError(`Account ${email} does not have access. Contact the administrator.`);
+      msalInstance.logoutRedirect({ onRedirectNavigate: () => false });
+      return;
+    }
+    S.user = { name, email, initials, role: roleData.Role, dealer: roleData.Dealer, token: graphToken };
+    showApp();
+  } catch(e) { unload(); showLoginError('Error verifying access. Please try again.'); }
+}
+
+async function checkUserAccess(email, token) {
+  try {
+    const siteId = await getSharePointSiteId(token);
+    if (!siteId) return null;
+    const url  = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Config_Users/items?$expand=fields&$top=50`;
+    const res  = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const items = data?.value || [];
+    const match = items.find(i => {
+      const f = i.fields?.User || i.fields?.Title || '';
+      return f.trim().toLowerCase() === email.trim().toLowerCase();
+    });
+    return match ? { Role: match.fields?.Role, Dealer: match.fields?.Dealer } : null;
+  } catch(e) { return null; }
+}
+
+async function getSharePointSiteId(token) {
+  try {
+    const res  = await fetch('https://graph.microsoft.com/v1.0/sites/hyundaipr.sharepoint.com:/sites/GPR', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    return data?.id || null;
+  } catch(e) { return null; }
+}
+
+function logout() { hideUserMenu(); msalInstance.logoutRedirect(); }
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.add('show');
+  document.getElementById('btnLogin').disabled = false;
+}
+
+// ── SHOW APP ──
+function showApp() {
+  unload();
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  const u = S.user;
+  document.getElementById('hdrUserName').textContent = u.name.split(' ')[0];
+  document.getElementById('hdrAvatar').textContent   = u.initials;
+  document.getElementById('umName').textContent      = u.name;
+  document.getElementById('umEmail').textContent     = u.email;
+  document.getElementById('umRole').textContent      = u.role || 'Consultant';
+  loadTodayVisits();
+  // Show admin tab only for Admin role
+  if (u.role === 'Admin') {
+    document.getElementById('tabAdmin').style.display = '';
+    const umAdmin = document.getElementById('umAdmin'); if(umAdmin) umAdmin.style.display='';
+    document.getElementById('appNav').style.gridTemplateColumns = '1fr 1fr 1fr';
+  }
+  // Set default admin date range to current month
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const lastDay = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('adminDateFrom').value = `${y}-${m}-01`;
+  document.getElementById('adminDateTo').value   = `${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+  initTheme();
+  loadModelChoices();
+}
+
+// ── TABS ──
+function switchTab(t) {
+  hideUserMenu();
+  ['register','history','admin'].forEach(x => {
+    const cap = x.charAt(0).toUpperCase() + x.slice(1);
+    const tabEl  = document.getElementById('tab'+cap);
+    const pageEl = document.getElementById('page'+cap);
+    if (tabEl)  tabEl.classList.toggle('active', x===t);
+    if (pageEl) pageEl.classList.toggle('active', x===t);
+  });
+  if (t === 'history') loadTodayVisits();
+  if (t === 'admin') loadAdminVisits();
+}
+
+// ── USER MENU ──
+function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
+function hideUserMenu()   { document.getElementById('userMenu').classList.remove('show'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#userMenu') && !e.target.closest('#hdrAvatar')) hideUserMenu();
+});
+
+// ── PILLS / SWITCHES ──
+function selPill(btn, g) {
+  if (g === 'model') {
+    btn.classList.toggle('active');
+    const v   = btn.textContent.trim();
+    const idx = S.sel.models.indexOf(v);
+    if (idx >= 0) S.sel.models.splice(idx, 1); else S.sel.models.push(v);
+    renderSelectedVehicles();
+    return;
+  }
+  const gmap = { source:'pgSource', time:'pgTime', result:'pgResult' };
+  document.querySelectorAll('#' + gmap[g] + ' .pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  S.sel[g] = btn.textContent.trim();
+}
+
+function renderSelectedVehicles() {
+  const el = document.getElementById('selectedVehicles');
+  if (!el) return;
+  el.innerHTML = (S.sel.models || []).map(m => `<span class="vtag vtag-model">${m}</span>`).join('');
+}
+
+function toggleSwitch(inputId, wrapId) {
+  const cb = document.getElementById(inputId);
+  cb.checked = !cb.checked;
+  document.getElementById(wrapId).classList.toggle('active-sw', cb.checked);
+}
+
+// ── CUSTOMER FLOW (CRITICAL) ──
+
+// When phone input changes, reset search state so user must re-search
+function onPhoneInput() {
+  if (S.customerSearchDone) {
+    S.customerSearchDone = false;
+    S.customerIsNew      = false;
+    S.customerId         = null;
+    document.getElementById('custBadge').className   = 'cust-badge';
+    document.getElementById('custBadge').style.display = 'none';
+    document.getElementById('fName').value            = '';
+    document.getElementById('fName').disabled         = true;
+    document.getElementById('searchHint').classList.remove('show');
+  }
+}
+
+async function findCustomer() {
+  const phone = document.getElementById('fPhone').value.trim();
+  if (!phone) { toast('Enter a phone number first', 'err'); return; }
+
+  load('Searching customer...');
+  document.getElementById('btnFind').disabled = true;
+
+  try {
+    const siteId = await getSharePointSiteId(S.user.token);
+    const url    = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Customers/items?$expand=fields&$top=500`;
+    const res    = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
+    const data   = await res.json();
+    const all    = data?.value || [];
+    const items  = all.filter(i => (i.fields?.PhoneNumber || '').trim() === phone.trim());
+
+    S.customerSearchDone = true;
+    document.getElementById('searchHint').classList.remove('show');
+
+    const badge       = document.getElementById('custBadge');
+    const badgeName   = document.getElementById('badgeName');
+    const badgeMeta   = document.getElementById('badgeMeta');
+    const badgeActions= document.getElementById('badgeActions');
+
+    if (items.length > 0) {
+      // ── EXISTING CUSTOMER ──
+      S.customerId   = items[0].id;
+      S.customerIsNew = false;
+      const name     = items[0].fields?.Title || '';
+      const phone2   = items[0].fields?.PhoneNumber || phone;
+
+      badgeName.textContent = name || 'Customer found';
+      badgeMeta.textContent = `ID ${S.customerId} · ${phone2}`;
+      badgeActions.innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Change customer</button>`;
+      badge.className = 'cust-badge found';
+
+      // Auto-fill name and lock field
+      if (name) document.getElementById('fName').value = name ? name.toUpperCase() : '';
+      document.getElementById('fName').disabled = true;
+
+      // Lock visit name for existing customers
+      document.getElementById('fVisitName').value = name.toUpperCase();
+      document.getElementById('fVisitName').disabled = true;
+      toast('Customer found', 'ok');
+
+    } else {
+      // ── NEW CUSTOMER ──
+      S.customerId    = null;
+      S.customerIsNew = true;
+
+      badgeName.textContent = 'New customer';
+      badgeMeta.textContent = 'Not found in the database';
+      badgeActions.innerHTML = `
+        <button class="btn-badge primary" onclick="confirmNewCustomer()">Create new customer</button>
+        <button class="btn-badge secondary" onclick="clearCustomer()">Change number</button>`;
+      badge.className = 'cust-badge new';
+
+      // Unlock name field for new customer
+      document.getElementById('fName').disabled = false;
+      document.getElementById('fName').focus();
+    }
+  } catch(e) {
+    S.customerSearchDone = false;
+    toast('Error searching customer', 'err');
+  } finally {
+    unload();
+    document.getElementById('btnFind').disabled = false;
+  }
+}
+
+function confirmNewCustomer() {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { toast('Enter the new customer name', 'err'); document.getElementById('fName').focus(); return; }
+  // Mark confirmed: lock the badge
+  const badge = document.getElementById('custBadge');
+  document.getElementById('badgeName').textContent = name.toUpperCase();
+  document.getElementById('badgeMeta').textContent = 'Will be registered on save · New';
+  document.getElementById('badgeActions').innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Change customer</button>`;
+  badge.className = 'cust-badge found'; // reuse found style as "confirmed"
+  document.getElementById('fName').disabled = true;
+  document.getElementById('fVisitName').value = name.toUpperCase();
+  document.getElementById('fVisitName').disabled = false; // new customer can edit
+  toast('Customer ready to register', 'ok');
+}
+
+function clearCustomer() {
+  S.customerSearchDone = false;
+  S.customerIsNew      = false;
+  S.customerId         = null;
+  document.getElementById('custBadge').className    = 'cust-badge';
+  document.getElementById('fName').value            = '';
+  document.getElementById('fName').disabled         = true;
+  document.getElementById('fPhone').value           = '';
+  document.getElementById('fPhone').focus();
+}
+
+// ── SAVE VISIT ──
+async function saveVisit() {
+  const phone      = document.getElementById('fPhone').value.trim().toUpperCase();
+  const name       = document.getElementById('fName').value.trim().toUpperCase();
+  const visitName  = name || document.getElementById('fVisitName').value.trim().toUpperCase();
+  const consultant = document.getElementById('fConsultant').value;
+  const hasTD = document.getElementById('swTD').checked;
+  const hasAP = document.getElementById('swAP').checked;
+  const hasSL = document.getElementById('swSL').checked;
+
+  // ── Validate: must search customer first ──
+  if (!S.customerSearchDone) {
+    document.getElementById('searchHint').classList.add('show');
+    document.getElementById('fPhone').focus();
+    toast('You must search for the customer first', 'err');
+    return;
+  }
+  if (!phone)                 { toast('Enter the phone number', 'err'); return; }
+  if (!name)                  { toast('Enter the customer name', 'err'); return; }
+  if (!S.sel.models.length)  { toast('Select at least one model', 'err'); return; }
+  if (!consultant)            { toast('Select a consultant', 'err'); return; }
+  if (!S.sel.source)          { toast('Select the lead source', 'err'); return; }
+  if (!S.sel.time)            { toast('Select the time in showroom', 'err'); return; }
+  if (!S.sel.result)          { toast('Select the visit result', 'err'); return; }
+  if (!hasTD && !hasAP && !hasSL) { toast('Select at least one activity', 'err'); return; }
+  if (!FLOW_URL)              { toast('Configure the flow URL', 'err'); return; }
+
+  load('Saving visit...');
+  document.getElementById('btnSave').disabled = true;
+
+  const body = {
+    VisitName:      visitName,
+    PhoneNumber:    phone,
+    CustomerName:   name,
+    Model:          S.sel.models.join(', '),
+    SalesConsultant:consultant,
+    LeadSource:     S.sel.source,
+    TestDrive:      document.getElementById('swTD').checked,
+    AppointmentSet: document.getElementById('swAP').checked,
+    Sold:           document.getElementById('swSL').checked,
+    Time:           S.sel.time || '',
+    Results:        S.sel.result,
+    IsNewCustomer:  S.customerIsNew,
+    CustomerId:     S.customerId || ''
+  };
+
+  try {
+    const res = await fetch(FLOW_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if (res.ok || res.status === 202) {
+      toast('Visit saved', 'ok');
+      resetForm();
+      setTimeout(() => switchTab('history'), 1000);
+    } else { throw new Error(res.status); }
+  } catch(e) { toast('Save failed. Please try again.', 'err'); }
+  finally { unload(); document.getElementById('btnSave').disabled = false; }
+}
+
+function resetForm() {
+  ['fVisitName','fName','fPhone'].forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).disabled = false; });
+  document.getElementById('fConsultant').value = '';
+  document.getElementById('fName').disabled    = true;
+  ['swTD','swAP','swSL'].forEach(id => document.getElementById(id).checked = false);
+  ['sw-td','sw-ap','sw-sl'].forEach(id => document.getElementById(id).classList.remove('active-sw'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('custBadge').className = 'cust-badge';
+  document.getElementById('searchHint').classList.remove('show');
+  S.sel = { models:[], source:null, time:null, result:null };
+  S.customerId         = null;
+  S.customerSearchDone = false;
+  S.customerIsNew      = false;
+  renderSelectedVehicles();
+}
+
+// ── HISTORY FILTERS ──
+function setFilter(f) {
+  S.history.filter = f;
+  ['Today','Week','Month'].forEach(x => {
+    document.getElementById('fBtn'+x).classList.toggle('active', x.toLowerCase() === f);
+  });
+  const labels = { today:"Today's visits", week:"This week's visits", month:"This month's visits" };
+  document.getElementById('histLabel').textContent = labels[f] || 'Visits';
+  loadTodayVisits();
+  // Show admin tab only for Admin role
+  if (u.role === 'Admin') {
+    document.getElementById('tabAdmin').style.display = '';
+    const umAdmin = document.getElementById('umAdmin'); if(umAdmin) umAdmin.style.display='';
+    document.getElementById('appNav').style.gridTemplateColumns = '1fr 1fr 1fr';
+  }
+  // Set default admin date range to current month
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const lastDay = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('adminDateFrom').value = `${y}-${m}-01`;
+  document.getElementById('adminDateTo').value   = `${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+  initTheme();
+  loadModelChoices();
+}
+
+let _searchTimer;
+function onHistSearch(val) {
+  S.history.query = val.toLowerCase().trim();
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(loadTodayVisits, 350);
+}
+
+// ── LOAD VISITS ──
+async function loadTodayVisits() {
+  const stack = document.getElementById('visitStack');
+  stack.innerHTML = '<div class="empty-state"><div class="empty-line"></div><div class="empty-text">Loading...</div></div>';
+  try {
+    const siteId = await getSharePointSiteId(S.user.token);
+    const now    = new Date();
+    const start  = new Date(now);
+    const f      = S.history.filter;
+
+    if (f === 'today') {
+      start.setHours(0,0,0,0);
+    } else if (f === 'week') {
+      const day = (start.getDay() + 6) % 7; // Monday = 0
+      start.setDate(start.getDate() - day);
+      start.setHours(0,0,0,0);
+    } else if (f === 'month') {
+      start.setDate(1);
+      start.setHours(0,0,0,0);
+    }
+
+    const q   = S.history.query || '';
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Showroom_Visits/items?$expand=fields&$top=500`;
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
+    const data = await res.json();
+    const rawItems = data?.value || [];
+
+    const items = rawItems
+      .filter(i => new Date(i.createdDateTime) >= start)
+      .sort((a,b) => new Date(b.createdDateTime) - new Date(a.createdDateTime))
+      .map(i => ({
+        VisitName:      i.fields?.Title,
+        Model:          i.fields?.Model,
+        Results:        i.fields?.Results,
+        LeadSource:     i.fields?.LeadSource,
+        TestDrive:      i.fields?.TestDrive,
+        AppointmentSet: i.fields?.AppointmentSet,
+        Sold:           i.fields?.Sold,
+        SalesConsultant:i.fields?.SalesConsultant,
+        Created:        i.createdDateTime
+      }))
+      .filter(i => {
+        if (!q) return true;
+        const hay = [i.VisitName, i.Model, i.Results, i.LeadSource, i.SalesConsultant].join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+
+    document.getElementById('sV').textContent = items.length;
+    document.getElementById('sD').textContent = items.filter(i => i.TestDrive).length;
+    document.getElementById('sA').textContent = items.filter(i => i.AppointmentSet).length;
+    document.getElementById('sS').textContent = items.filter(i => i.Sold).length;
+
+    if (!items.length) {
+      stack.innerHTML = '<div class="empty-state"><div class="empty-line"></div><div class="empty-text">No visits in this period</div></div>';
+      return;
+    }
+
+    const rc = r => ({'Interested':'vtag-interested','Interesado':'vtag-interested','Lead':'vtag-lead','Curious':'vtag-curious','Curioso':'vtag-curious'}[r] || 'vtag-source');
+    stack.innerHTML = items.map(i => {
+      const t = new Date(i.Created).toLocaleTimeString('es-PR', { hour:'2-digit', minute:'2-digit' });
+      const models = (i.Model || '').split(',').map(m => m.trim()).filter(Boolean);
+      return `<div class="visit-card">
+        <div class="vc-top"><div class="vc-name">${i.VisitName || '—'}</div><div class="vc-time">${t}</div></div>
+        <div class="vc-tags">
+          ${models.map(m => `<span class="vtag vtag-model">${m}</span>`).join('')}
+          ${i.Results    ? `<span class="vtag ${rc(i.Results)}">${i.Results}</span>` : ''}
+          ${i.LeadSource ? `<span class="vtag vtag-source">${i.LeadSource}</span>` : ''}
+        </div>
+        <div class="vc-meta">
+          <div class="vc-meta-i ${i.TestDrive ? 'on':''}"><div class="vc-dot"></div>Test Drive</div>
+          <div class="vc-meta-i ${i.AppointmentSet ? 'on':''}"><div class="vc-dot"></div>Appointment</div>
+          <div class="vc-meta-i ${i.Sold ? 'on':''}"><div class="vc-dot"></div>Sold</div>
+          ${i.SalesConsultant ? `<div class="vc-meta-i" style="margin-left:auto;color:var(--white3)">${i.SalesConsultant}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    stack.innerHTML = '<div class="empty-state"><div class="empty-line"></div><div class="empty-text">Error loading visits</div></div>';
+  }
+}
+
+
+
+// ── LOAD MODELS FROM SHAREPOINT ──
+async function loadModelChoices() {
+  try {
+    const siteId = await getSharePointSiteId(S.user.token);
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Showroom_Visits/columns`;
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
+    const data = await res.json();
+    const modelCol = (data?.value || []).find(c => c.name === 'Model' || c.displayName === 'Model');
+    const choices = modelCol?.choice?.choices || ['GV60','GV70','G70','GV80','G80','G90'];
+    const sel = document.getElementById('fModel');
+    sel.innerHTML = '<option value="">Select model</option>' + choices.map(c => `<option value="${c}">${c}</option>`).join('');
+  } catch(e) {
+    // fallback to hardcoded
+    const sel = document.getElementById('fModel');
+    sel.innerHTML = '<option value="">Select model</option><option>GV60</option><option>GV70</option><option>G70</option><option>GV80</option><option>G80</option><option>G90</option>';
+  }
+}
+
+// ── MODEL MULTI-SELECT FROM DROPDOWN ──
+function onModelSelect(sel) {
+  const v = sel.value;
+  if (!v) return;
+  if (!S.sel.models.includes(v)) {
+    S.sel.models.push(v);
+    renderSelectedVehicles();
+  }
+  sel.value = ''; // reset dropdown so user can pick another
+}
+
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeToggle').textContent = isLight ? '☾' : '☀';
+  try { localStorage.setItem('gme_theme', isLight ? 'light' : 'dark'); } catch(e){}
+}
+function initTheme() {
+  let pref = 'dark';
+  try { pref = localStorage.getItem('gme_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); } catch(e){}
+  if (pref === 'light') { document.body.classList.add('light'); document.getElementById('themeToggle').textContent = '☾'; }
+}
+
+// ── ADMIN: LOAD VISITS ──
+let _adminData = [];
+async function loadAdminVisits() {
+  const tbody = document.getElementById('adminTableBody');
+  tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">Loading...</td></tr>';
+  try {
+    const siteId = await getSharePointSiteId(S.user.token);
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Showroom_Visits/items?$expand=fields&$top=500`;
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
+    const data = await res.json();
+    let items = (data?.value || []).map(i => ({
+      VisitName:       i.fields?.Title || '',
+      CustomerID:      i.fields?.CustomerID || '',
+      Model:           i.fields?.Model || '',
+      SalesConsultant: i.fields?.SalesConsultant || '',
+      LeadSource:      i.fields?.LeadSource || '',
+      Results:         i.fields?.Results || '',
+      TestDrive:       i.fields?.TestDrive || false,
+      AppointmentSet:  i.fields?.AppointmentSet || false,
+      Sold:            i.fields?.Sold || false,
+      Time:            i.fields?.Time || '',
+      VisitDate:       i.fields?.VisitDate || i.createdDateTime?.split('T')[0] || ''
+    }));
+
+    // Apply date filter
+    const from = document.getElementById('adminDateFrom').value;
+    const to   = document.getElementById('adminDateTo').value;
+    if (from) items = items.filter(i => i.VisitDate >= from);
+    if (to)   items = items.filter(i => i.VisitDate <= to);
+
+    // Sort by date desc
+    items.sort((a,b) => b.VisitDate.localeCompare(a.VisitDate));
+    _adminData = items;
+
+    // Update stats
+    document.getElementById('aV').textContent = items.length;
+    document.getElementById('aD').textContent = items.filter(i => i.TestDrive).length;
+    document.getElementById('aA').textContent = items.filter(i => i.AppointmentSet).length;
+    document.getElementById('aS').textContent = items.filter(i => i.Sold).length;
+
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">No visits found for this period</td></tr>';
+      return;
+    }
+
+    const rc = r => ({'Interested':'vtag-interested','Lead':'vtag-lead','Curious':'vtag-curious'}[r] || 'vtag-source');
+    const chk = v => v ? '<span class="check-yes">✓</span>' : '<span class="check-no">—</span>';
+    tbody.innerHTML = items.map(i => `<tr>
+      <td>${i.VisitName || '—'}</td>
+      <td>${i.CustomerID || '—'}</td>
+      <td>${i.Model ? `<span class="vtag vtag-model td-tag">${i.Model}</span>` : '—'}</td>
+      <td>${i.SalesConsultant || '—'}</td>
+      <td>${i.LeadSource || '—'}</td>
+      <td>${i.Results ? `<span class="vtag ${rc(i.Results)} td-tag">${i.Results}</span>` : '—'}</td>
+      <td class="td-check">${chk(i.TestDrive)}</td>
+      <td class="td-check">${chk(i.AppointmentSet)}</td>
+      <td class="td-check">${chk(i.Sold)}</td>
+      <td>${i.Time || '—'}</td>
+      <td>${i.VisitDate || '—'}</td>
+    </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">Error loading visits</td></tr>';
+  }
+}
+
+// ── EXPORT TO EXCEL ──
+function exportToExcel() {
+  if (!_adminData.length) { toast('No data to export', 'err'); return; }
+  const from = document.getElementById('adminDateFrom').value || 'all';
+  const to   = document.getElementById('adminDateTo').value   || 'all';
+  const rows = _adminData.map(i => ({
+    'Visit Name':      i.VisitName,
+    'Customer':        i.CustomerID,
+    'Model':           i.Model,
+    'Consultant':      i.SalesConsultant,
+    'Lead Source':     i.LeadSource,
+    'Result':          i.Results,
+    'Test Drive':      i.TestDrive ? 'Yes' : 'No',
+    'Appointment Set': i.AppointmentSet ? 'Yes' : 'No',
+    'Sold':            i.Sold ? 'Yes' : 'No',
+    'Time':            i.Time,
+    'Visit Date':      i.VisitDate
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Visits');
+  // Style header row width
+  ws['!cols'] = [20,20,10,14,14,12,11,16,8,10,12].map(w => ({wch:w}));
+  XLSX.writeFile(wb, `Genesis_Visits_${from}_${to}.xlsx`);
+  toast('Excel exported', 'ok');
+}
+
+// ── DATES ──
+function setDates() {
+  const d = new Date();
+  const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('hDay').textContent  = days[d.getDay()];
+  document.getElementById('hDate').textContent = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+// ── UI HELPERS ──
+function load(t) { document.getElementById('loaderText').textContent = t || 'Processing'; document.getElementById('loader').classList.add('show'); }
+function unload() { document.getElementById('loader').classList.remove('show'); }
+let _tt;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
