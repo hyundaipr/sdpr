@@ -619,11 +619,13 @@ body.light .star-btn:hover,body.light .star-btn.active{color:var(--gold)}
             <th>Model</th>
             <th>Consultant</th>
             <th>Lead Source</th>
+            <th>Visit Reason</th>
             <th>Result</th>
             <th>Test Drive</th>
             <th>Appointment</th>
             <th>Sold</th>
             <th>Time</th>
+            <th>Rating</th>
             <th>Visit Date</th>
           </tr>
         </thead>
@@ -1383,7 +1385,7 @@ function initTheme() {
 let _adminData = [];
 async function loadAdminVisits() {
   const tbody = document.getElementById('adminTableBody');
-  tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="13" class="admin-empty">Loading...</td></tr>';
   try {
     const siteId = await getSharePointSiteId(S.user.token);
     const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Showroom_Visits/items?$expand=fields&$top=500`;
@@ -1400,7 +1402,9 @@ async function loadAdminVisits() {
       AppointmentSet:  i.fields?.AppointmentSet || false,
       Sold:            i.fields?.Sold || false,
       Time:            i.fields?.Time || '',
-      VisitDate:       i.fields?.VisitDate || i.createdDateTime?.split('T')[0] || ''
+      VisitReason:      i.fields?.VisitReason || '',
+      ExperienceRating: i.fields?.ExperienceRating || '',
+      VisitDate:        (i.fields?.VisitDate || i.createdDateTime || '').split('T')[0]
     }));
 
     // Apply date filter
@@ -1420,27 +1424,28 @@ async function loadAdminVisits() {
     document.getElementById('aS').textContent = items.filter(i => i.Sold).length;
 
     if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">No visits found for this period</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="13" class="admin-empty">No visits found for this period</td></tr>';
       return;
     }
 
-    const rc = r => ({'Interested':'vtag-interested','Lead':'vtag-lead','Curious':'vtag-curious'}[r] || 'vtag-source');
     const chk = v => v ? '<span class="check-yes">✓</span>' : '<span class="check-no">—</span>';
     tbody.innerHTML = items.map(i => `<tr>
       <td>${i.VisitName || '—'}</td>
       <td>${i.CustomerID || '—'}</td>
-      <td>${i.Model ? `<span class="vtag vtag-model td-tag">${i.Model}</span>` : '—'}</td>
+      <td>${i.Model || '—'}</td>
       <td>${i.SalesConsultant || '—'}</td>
       <td>${i.LeadSource || '—'}</td>
-      <td>${i.Results ? `<span class="vtag ${rc(i.Results)} td-tag">${i.Results}</span>` : '—'}</td>
+      <td>${i.VisitReason || '—'}</td>
+      <td>${i.Results || '—'}</td>
       <td class="td-check">${chk(i.TestDrive)}</td>
       <td class="td-check">${chk(i.AppointmentSet)}</td>
       <td class="td-check">${chk(i.Sold)}</td>
       <td>${i.Time || '—'}</td>
+      <td class="td-check">${i.ExperienceRating ? '★'.repeat(Number(i.ExperienceRating)) : '—'}</td>
       <td>${i.VisitDate || '—'}</td>
     </tr>`).join('');
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="11" class="admin-empty">Error loading visits</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" class="admin-empty">Error loading visits</td></tr>';
   }
 }
 
@@ -1455,18 +1460,20 @@ function exportToExcel() {
     'Model':           i.Model,
     'Consultant':      i.SalesConsultant,
     'Lead Source':     i.LeadSource,
+    'Visit Reason':    i.VisitReason,
     'Result':          i.Results,
     'Test Drive':      i.TestDrive ? 'Yes' : 'No',
     'Appointment Set': i.AppointmentSet ? 'Yes' : 'No',
     'Sold':            i.Sold ? 'Yes' : 'No',
     'Time':            i.Time,
+    'Rating':          i.ExperienceRating ? String(i.ExperienceRating) : '',
     'Visit Date':      i.VisitDate
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Visits');
   // Style header row width
-  ws['!cols'] = [20,20,10,14,14,12,11,16,8,10,12].map(w => ({wch:w}));
+  ws['!cols'] = [20,20,10,14,14,16,12,11,16,8,10,8,12].map(w => ({wch:w}));
   XLSX.writeFile(wb, `Genesis_Visits_${from}_${to}.xlsx`);
   toast('Excel exported', 'ok');
 }
