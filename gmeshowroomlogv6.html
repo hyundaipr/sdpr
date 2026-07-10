@@ -267,6 +267,29 @@ body.light .check-no{color:rgba(0,0,0,0.15)}
 .admin-stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border2);overflow:hidden;margin-bottom:20px}
 .admin-empty{text-align:center;padding:50px 20px;color:var(--white3);font-size:10px;letter-spacing:0.2em;text-transform:uppercase}
 
+
+/* ── SEARCH TYPE TOGGLE ── */
+.search-type-row{display:flex;gap:6px;margin-bottom:0}
+.search-type-btn{flex:1;padding:8px;background:transparent;border:1px solid var(--border2);color:var(--white3);font-family:var(--ff-sans);font-size:9px;font-weight:400;letter-spacing:0.25em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+.search-type-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+body.light .search-type-btn{background:#fff;border-color:rgba(0,0,0,0.09);color:#666}
+body.light .search-type-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+/* ── SEARCH RESULTS LIST ── */
+.search-results{display:none;margin-top:8px;border:1px solid var(--border2);overflow:hidden}
+.search-results.show{display:block}
+.search-result-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background 0.15s}
+.search-result-item:last-child{border-bottom:none}
+.search-result-item:hover{background:var(--gold-bg)}
+.sri-name{font-family:var(--ff-serif);font-size:15px;color:var(--white);margin-bottom:2px}
+.sri-meta{font-size:9px;font-weight:300;letter-spacing:0.08em;color:var(--white3)}
+body.light .search-result-item:hover{background:var(--gold-bg)}
+body.light .sri-name{color:#1c1c1c}
+
+/* ── BADGE HISTORY ── */
+.badge-history{margin-top:4px;font-size:9px;font-weight:300;letter-spacing:0.08em;color:var(--gold3)}
+.badge-history.has-visits{color:var(--gold)}
+
 /* ── LOADER ── */
 .loader{display:none;position:fixed;inset:0;background:rgba(8,8,8,0.88);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:20px}
 .loader.show{display:flex}
@@ -350,25 +373,45 @@ body.light .check-no{color:rgba(0,0,0,0.15)}
     <!-- STEP 1: CLIENTE -->
     <div class="sec-label">Customer Information</div>
 
-    <!-- Phone search first -->
+    <!-- Customer Search -->
     <div class="fgrp">
-      <label class="flabel">Phone</label>
-      <div class="search-row">
-        <input class="finput" id="fPhone" type="tel" placeholder="787-000-0000" oninput="onPhoneInput()" style="text-transform:uppercase">
+      <!-- Search type toggle -->
+      <div class="search-type-row">
+        <button class="search-type-btn active" id="stPhone" onclick="setSearchType('phone')">By Phone</button>
+        <button class="search-type-btn" id="stName" onclick="setSearchType('name')">By Name</button>
+      </div>
+      <div class="search-row" style="margin-top:8px">
+        <input class="finput" id="fPhone" type="tel" placeholder="787-000-0000" oninput="onSearchInput()" style="text-transform:uppercase">
         <button class="btn-action" id="btnFind" onclick="findCustomer()">Search</button>
       </div>
       <div class="search-hint" id="searchHint">You must search for the customer before continuing</div>
+
+      <!-- Search results list (for name search) -->
+      <div class="search-results" id="searchResults"></div>
+
+      <!-- Customer confirmation badge -->
       <div class="cust-badge" id="custBadge">
-        <div class="badge-name" id="badgeName"></div>
-        <div class="badge-meta" id="badgeMeta"></div>
+        <div class="cust-badge-header">
+          <div>
+            <div class="badge-name" id="badgeName"></div>
+            <div class="badge-meta" id="badgeMeta"></div>
+            <div class="badge-history" id="badgeHistory"></div>
+          </div>
+        </div>
         <div class="badge-actions" id="badgeActions"></div>
       </div>
     </div>
 
-    <!-- Name: auto-filled if found, editable if new -->
-    <div class="fgrp">
-      <label class="flabel">Full name</label>
-      <input class="finput" id="fName" type="text" placeholder="Customer name" disabled style="text-transform:uppercase">
+    <!-- Name + Phone locked after confirmation -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" class="fgrp">
+      <div>
+        <label class="flabel">Full name</label>
+        <input class="finput" id="fName" type="text" placeholder="Customer name" disabled style="text-transform:uppercase">
+      </div>
+      <div>
+        <label class="flabel">Phone</label>
+        <input class="finput" id="fPhoneConfirm" type="tel" placeholder="787-000-0000" disabled style="text-transform:uppercase">
+      </div>
     </div>
 
     <div class="fdivider"></div>
@@ -726,82 +769,118 @@ function toggleSwitch(inputId, wrapId) {
   document.getElementById(wrapId).classList.toggle('active-sw', cb.checked);
 }
 
-// ── CUSTOMER FLOW (CRITICAL) ──
+// ── CUSTOMER FLOW ──
+let _searchType = 'phone'; // 'phone' or 'name'
 
-// When phone input changes, reset search state so user must re-search
-function onPhoneInput() {
-  if (S.customerSearchDone) {
-    S.customerSearchDone = false;
-    S.customerIsNew      = false;
-    S.customerId         = null;
-    document.getElementById('custBadge').className   = 'cust-badge';
-    document.getElementById('custBadge').style.display = 'none';
-    document.getElementById('fName').value            = '';
-    document.getElementById('fName').disabled         = true;
-    document.getElementById('searchHint').classList.remove('show');
+function setSearchType(type) {
+  _searchType = type;
+  document.getElementById('stPhone').classList.toggle('active', type === 'phone');
+  document.getElementById('stName').classList.toggle('active', type === 'name');
+  const inp = document.getElementById('fPhone');
+  if (type === 'phone') {
+    inp.type = 'tel';
+    inp.placeholder = '787-000-0000';
+    inp.style.textTransform = 'uppercase';
+  } else {
+    inp.type = 'text';
+    inp.placeholder = 'Search by name...';
+    inp.style.textTransform = 'uppercase';
   }
+  inp.value = '';
+  document.getElementById('searchResults').classList.remove('show');
+  document.getElementById('searchResults').innerHTML = '';
+  onSearchInput();
+}
+
+function onSearchInput() {
+  if (S.customerSearchDone) {
+    resetCustomerState();
+  }
+  document.getElementById('searchResults').classList.remove('show');
+}
+
+function resetCustomerState() {
+  S.customerSearchDone = false;
+  S.customerIsNew      = false;
+  S.customerId         = null;
+  document.getElementById('custBadge').className = 'cust-badge';
+  document.getElementById('fName').value         = '';
+  document.getElementById('fName').disabled      = true;
+  document.getElementById('fPhoneConfirm').value = '';
+  document.getElementById('fPhoneConfirm').disabled = true;
+  document.getElementById('fVisitName').value    = '';
+  document.getElementById('fVisitName').disabled = false;
+  document.getElementById('searchHint').classList.remove('show');
 }
 
 async function findCustomer() {
-  const phone = document.getElementById('fPhone').value.trim();
-  if (!phone) { toast('Enter a phone number first', 'err'); return; }
+  const query = document.getElementById('fPhone').value.trim();
+  if (!query) { toast(_searchType === 'phone' ? 'Enter a phone number first' : 'Enter a name to search', 'err'); return; }
 
   load('Searching customer...');
   document.getElementById('btnFind').disabled = true;
+  document.getElementById('searchResults').classList.remove('show');
 
   try {
     const siteId = await getSharePointSiteId(S.user.token);
-    const url    = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Customers/items?$expand=fields&$top=500`;
-    const res    = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
-    const data   = await res.json();
-    const all    = data?.value || [];
-    const items  = all.filter(i => (i.fields?.PhoneNumber || '').trim() === phone.trim());
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Customers/items?$expand=fields&$top=500`;
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
+    const data = await res.json();
+    const all = data?.value || [];
 
-    S.customerSearchDone = true;
+    let matches = [];
+    if (_searchType === 'phone') {
+      matches = all.filter(i => (i.fields?.PhoneNumber || '').trim() === query.trim());
+    } else {
+      const q = query.trim().toUpperCase();
+      matches = all.filter(i => (i.fields?.Title || '').toUpperCase().includes(q));
+    }
+
     document.getElementById('searchHint').classList.remove('show');
 
-    const badge       = document.getElementById('custBadge');
-    const badgeName   = document.getElementById('badgeName');
-    const badgeMeta   = document.getElementById('badgeMeta');
-    const badgeActions= document.getElementById('badgeActions');
-
-    if (items.length > 0) {
-      // ── EXISTING CUSTOMER ──
-      S.customerId   = items[0].id;
-      S.customerIsNew = false;
-      const name     = items[0].fields?.Title || '';
-      const phone2   = items[0].fields?.PhoneNumber || phone;
-
-      badgeName.textContent = name || 'Customer found';
-      badgeMeta.textContent = `ID ${S.customerId} · ${phone2}`;
-      badgeActions.innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Change customer</button>`;
-      badge.className = 'cust-badge found';
-
-      // Auto-fill name and lock field
-      if (name) document.getElementById('fName').value = name ? name.toUpperCase() : '';
-      document.getElementById('fName').disabled = true;
-
-      // Lock visit name for existing customers
-      document.getElementById('fVisitName').value = name.toUpperCase();
-      document.getElementById('fVisitName').disabled = true;
-      toast('Customer found', 'ok');
-
-    } else {
+    if (matches.length === 0) {
       // ── NEW CUSTOMER ──
+      S.customerSearchDone = true;
       S.customerId    = null;
       S.customerIsNew = true;
-
-      badgeName.textContent = 'New customer';
-      badgeMeta.textContent = 'Not found in the database';
-      badgeActions.innerHTML = `
+      const badge = document.getElementById('custBadge');
+      document.getElementById('badgeName').textContent = 'New customer';
+      document.getElementById('badgeMeta').textContent = 'Not found in the database';
+      document.getElementById('badgeHistory').textContent = '';
+      document.getElementById('badgeActions').innerHTML = `
         <button class="btn-badge primary" onclick="confirmNewCustomer()">Create new customer</button>
-        <button class="btn-badge secondary" onclick="clearCustomer()">Change number</button>`;
+        <button class="btn-badge secondary" onclick="clearCustomer()">Search again</button>`;
       badge.className = 'cust-badge new';
-
-      // Unlock name field for new customer
+      // Pre-fill name if searched by name
+      if (_searchType === 'name') {
+        document.getElementById('fName').value = query.toUpperCase();
+      }
       document.getElementById('fName').disabled = false;
-      document.getElementById('fName').focus();
+      if (_searchType === 'phone') {
+        document.getElementById('fPhoneConfirm').value = query;
+      }
+      document.getElementById('fPhoneConfirm').disabled = false;
+
+    } else if (matches.length === 1) {
+      // ── SINGLE MATCH — show confirmation ──
+      showCustomerConfirmation(matches[0]);
+
+    } else {
+      // ── MULTIPLE MATCHES — show list ──
+      S.customerSearchDone = true;
+      const resultsEl = document.getElementById('searchResults');
+      resultsEl.innerHTML = matches.map((m, idx) => {
+        const n = m.fields?.Title || '—';
+        const p = m.fields?.PhoneNumber || '—';
+        return `<div class="search-result-item" onclick="selectCustomerFromList(${idx})">
+          <div class="sri-name">${n.toUpperCase()}</div>
+          <div class="sri-meta">${p}</div>
+        </div>`;
+      }).join('');
+      resultsEl._matches = matches;
+      resultsEl.classList.add('show');
     }
+
   } catch(e) {
     S.customerSearchDone = false;
     toast('Error searching customer', 'err');
@@ -811,37 +890,126 @@ async function findCustomer() {
   }
 }
 
-function confirmNewCustomer() {
-  const name = document.getElementById('fName').value.trim();
-  if (!name) { toast('Enter the new customer name', 'err'); document.getElementById('fName').focus(); return; }
-  // Mark confirmed: lock the badge
+function selectCustomerFromList(idx) {
+  const matches = document.getElementById('searchResults')._matches;
+  if (!matches || !matches[idx]) return;
+  document.getElementById('searchResults').classList.remove('show');
+  showCustomerConfirmation(matches[idx]);
+}
+
+async function showCustomerConfirmation(item) {
+  S.customerId    = item.id;
+  S.customerIsNew = false;
+
+  const name  = (item.fields?.Title || '').toUpperCase();
+  const phone = item.fields?.PhoneNumber || '';
+
+  // Get visit history count
+  let visitCount = 0;
+  let lastVisit  = '';
+  try {
+    const siteId = await getSharePointSiteId(S.user.token);
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/Showroom_Visits/items?$expand=fields&$top=500`;
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + S.user.token } });
+    const data = await res.json();
+    const visits = (data?.value || []).filter(v => String(v.fields?.CustomerIDId || v.fields?.CustomerID) === String(S.customerId));
+    visitCount = visits.length;
+    if (visitCount > 0) {
+      const sorted = visits.sort((a,b) => new Date(b.fields?.VisitDate || b.createdDateTime) - new Date(a.fields?.VisitDate || a.createdDateTime));
+      const d = new Date(sorted[0].fields?.VisitDate || sorted[0].createdDateTime);
+      lastVisit = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+  } catch(e) {}
+
   const badge = document.getElementById('custBadge');
-  document.getElementById('badgeName').textContent = name.toUpperCase();
-  document.getElementById('badgeMeta').textContent = 'Will be registered on save · New';
-  document.getElementById('badgeActions').innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Change customer</button>`;
-  badge.className = 'cust-badge found'; // reuse found style as "confirmed"
+  document.getElementById('badgeName').textContent = name || 'Customer found';
+  document.getElementById('badgeMeta').textContent = `${phone} · Existing customer`;
+  const histEl = document.getElementById('badgeHistory');
+  if (visitCount > 0) {
+    histEl.textContent = `${visitCount} previous visit${visitCount > 1 ? 's' : ''} · Last: ${lastVisit}`;
+    histEl.className = 'badge-history has-visits';
+  } else {
+    histEl.textContent = 'First visit';
+    histEl.className = 'badge-history';
+  }
+  document.getElementById('badgeActions').innerHTML = `
+    <button class="btn-badge primary" onclick="confirmExistingCustomer()">Confirm</button>
+    <button class="btn-badge secondary" onclick="editCustomerData()">Edit</button>
+    <button class="btn-badge secondary" onclick="clearCustomer()">Not this customer</button>`;
+  badge.className = 'cust-badge found';
+
+  // Pre-fill but keep unlocked until confirmed
+  document.getElementById('fName').value = name;
   document.getElementById('fName').disabled = true;
-  document.getElementById('fVisitName').value = name.toUpperCase();
-  document.getElementById('fVisitName').disabled = false; // new customer can edit
+  document.getElementById('fPhoneConfirm').value = phone;
+  document.getElementById('fPhoneConfirm').disabled = true;
+}
+
+function confirmExistingCustomer() {
+  const name  = document.getElementById('fName').value.trim().toUpperCase();
+  const phone = document.getElementById('fPhoneConfirm').value.trim();
+  if (!name)  { toast('Name is required', 'err'); return; }
+  if (!phone) { toast('Phone is required', 'err'); return; }
+
+  S.customerSearchDone = true;
+  // Lock fields
+  document.getElementById('fName').disabled = true;
+  document.getElementById('fPhoneConfirm').disabled = true;
+  // Update badge actions
+  document.getElementById('badgeActions').innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Search again</button>`;
+  // Auto-fill visit name
+  document.getElementById('fVisitName').value = name;
+  document.getElementById('fVisitName').disabled = true;
+  toast('Customer confirmed', 'ok');
+}
+
+function editCustomerData() {
+  document.getElementById('fName').disabled = false;
+  document.getElementById('fPhoneConfirm').disabled = false;
+  document.getElementById('fName').focus();
+  document.getElementById('badgeActions').innerHTML = `
+    <button class="btn-badge primary" onclick="confirmExistingCustomer()">Confirm</button>
+    <button class="btn-badge secondary" onclick="clearCustomer()">Not this customer</button>`;
+}
+
+function confirmNewCustomer() {
+  const name  = document.getElementById('fName').value.trim().toUpperCase();
+  const phone = document.getElementById('fPhoneConfirm').value.trim();
+  if (!name)  { toast('Enter the customer name', 'err'); document.getElementById('fName').focus(); return; }
+  if (!phone) { toast('Enter the customer phone', 'err'); document.getElementById('fPhoneConfirm').focus(); return; }
+
+  S.customerSearchDone = true;
+  document.getElementById('fName').disabled = true;
+  document.getElementById('fPhoneConfirm').disabled = true;
+  document.getElementById('badgeName').textContent = name;
+  document.getElementById('badgeMeta').textContent = `${phone} · New customer`;
+  document.getElementById('badgeHistory').textContent = 'Will be registered on save';
+  document.getElementById('badgeActions').innerHTML = `<button class="btn-badge secondary" onclick="clearCustomer()">Search again</button>`;
+  document.getElementById('custBadge').className = 'cust-badge found';
+  document.getElementById('fVisitName').value = name;
+  document.getElementById('fVisitName').disabled = false;
   toast('Customer ready to register', 'ok');
 }
 
 function clearCustomer() {
-  S.customerSearchDone = false;
-  S.customerIsNew      = false;
-  S.customerId         = null;
-  document.getElementById('custBadge').className    = 'cust-badge';
-  document.getElementById('fName').value            = '';
-  document.getElementById('fName').disabled         = true;
-  document.getElementById('fVisitName').value       = '';
-  document.getElementById('fVisitName').disabled    = false;
-  document.getElementById('fPhone').value           = '';
+  resetCustomerState();
+  document.getElementById('fPhone').value = '';
+  document.getElementById('searchResults').classList.remove('show');
+  document.getElementById('searchResults').innerHTML = '';
   document.getElementById('fPhone').focus();
+  // Also reset visit details
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  ['swTD','swAP','swSL'].forEach(id => document.getElementById(id).checked = false);
+  ['sw-td','sw-ap','sw-sl'].forEach(id => document.getElementById(id).classList.remove('active-sw'));
+  S.sel = { models:[], source:null, time:null, result:null };
+  document.getElementById('fModel').value = '';
+  document.getElementById('fConsultant').value = '';
+  renderSelectedVehicles();
 }
 
 // ── SAVE VISIT ──
 async function saveVisit() {
-  const phone      = document.getElementById('fPhone').value.trim().toUpperCase();
+  const phone      = (document.getElementById('fPhoneConfirm').value.trim() || document.getElementById('fPhone').value.trim()).toUpperCase();
   const name       = document.getElementById('fName').value.trim().toUpperCase();
   const visitName  = name || document.getElementById('fVisitName').value.trim().toUpperCase();
   const consultant = document.getElementById('fConsultant').value;
@@ -897,10 +1065,14 @@ async function saveVisit() {
 }
 
 function resetForm() {
-  ['fVisitName','fName','fPhone'].forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).disabled = false; });
+  ['fVisitName','fName','fPhone','fPhoneConfirm'].forEach(id => { const el = document.getElementById(id); if(el){ el.value = ''; el.disabled = false; } });
   document.getElementById('fConsultant').value = '';
   document.getElementById('fModel').value = '';
   document.getElementById('fName').disabled    = true;
+  document.getElementById('fPhoneConfirm').disabled = true;
+  document.getElementById('custBadge').className = 'cust-badge';
+  document.getElementById('searchResults').classList.remove('show');
+  document.getElementById('searchResults').innerHTML = '';
   ['swTD','swAP','swSL'].forEach(id => document.getElementById(id).checked = false);
   ['sw-td','sw-ap','sw-sl'].forEach(id => document.getElementById(id).classList.remove('active-sw'));
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
