@@ -419,49 +419,54 @@ body.light .sri-name{color:#1c1c1c}
     <!-- STEP 2: VISITA -->
     <div class="sec-label">Visit Details</div>
 
-    <div class="fgrp">
-      <label class="flabel">Visit name</label>
-      <input class="finput" id="fVisitName" type="text" placeholder="E.g: JOHN DOE · WALK-IN" style="text-transform:uppercase">
-    </div>
-
-    <div class="fgrp-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div class="fgrp" style="margin-bottom:0">
+    <!-- Row 1: Visit Name | Model of Interest -->
+    <div class="fgrp-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px">
+      <div>
+        <label class="flabel">Visit name</label>
+        <input class="finput" id="fVisitName" type="text" placeholder="E.g: JOHN DOE · WALK-IN" style="text-transform:uppercase">
+      </div>
+      <div>
         <label class="flabel">Model of interest</label>
         <select class="finput" id="fModel" onchange="onModelSelect(this)">
           <option value="">Select model</option>
         </select>
         <div class="selected-vehicles" id="selectedVehicles"></div>
       </div>
-      <div class="fgrp" style="margin-bottom:0">
+    </div>
+
+    <!-- Row 2: Sales Consultant | Lead Source -->
+    <div class="fgrp-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px">
+      <div>
         <label class="flabel">Sales consultant</label>
         <select class="finput" id="fConsultant">
           <option value="">Select consultant</option>
         </select>
       </div>
-    </div>
-
-    <div class="fgrp">
-      <label class="flabel">Lead source</label>
-      <select class="finput" id="fLeadSource" onchange="S.sel.source=this.value">
-        <option value="">Select lead source</option>
-      </select>
-    </div>
-
-    <div class="fgrp">
-      <label class="flabel">Time in showroom</label>
-      <div class="pill-group" id="pgTime">
-        <button class="pill" onclick="selPill(this,'time')">&lt;5 min</button>
-        <button class="pill" onclick="selPill(this,'time')">5–15 min</button>
-        <button class="pill" onclick="selPill(this,'time')">15+ min</button>
+      <div>
+        <label class="flabel">Lead source</label>
+        <select class="finput" id="fLeadSource" onchange="S.sel.source=this.value">
+          <option value="">Select lead source</option>
+        </select>
       </div>
     </div>
 
-    <div class="fgrp">
-      <label class="flabel">Visit result</label>
-      <div class="pill-group" id="pgResult">
-        <button class="pill" onclick="selPill(this,'result')">Curious</button>
-        <button class="pill" onclick="selPill(this,'result')">Interested</button>
-        <button class="pill" onclick="selPill(this,'result')">Lead</button>
+    <!-- Row 3: Time in Showroom | Visit Result -->
+    <div class="fgrp-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px">
+      <div>
+        <label class="flabel">Time in showroom</label>
+        <div class="pill-group" id="pgTime">
+          <button class="pill" onclick="selPill(this,'time')">&lt;5 min</button>
+          <button class="pill" onclick="selPill(this,'time')">5–15 min</button>
+          <button class="pill" onclick="selPill(this,'time')">15+ min</button>
+        </div>
+      </div>
+      <div>
+        <label class="flabel">Visit result</label>
+        <div class="pill-group" id="pgResult">
+          <button class="pill" onclick="selPill(this,'result')">Curious</button>
+          <button class="pill" onclick="selPill(this,'result')">Interested</button>
+          <button class="pill" onclick="selPill(this,'result')">Lead</button>
+        </div>
       </div>
     </div>
 
